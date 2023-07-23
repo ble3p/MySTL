@@ -52,7 +52,7 @@ namespace MyStl
   {
     if (n == 0)
       return nullptr;
-    return static_cast<T*>(::operator new(n * sizeof(T)));
+    return static_cast<pointer>(::operator new(n * sizeof(T)));
   }
 
   template <class T>
