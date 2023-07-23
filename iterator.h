@@ -18,6 +18,7 @@ struct output_iterator_tag {};
 struct forward_iterator_tag : public input_iterator_tag {};
 struct bidirectional_iterator_tag : public forward_iterator_tag {};
 struct random_access_iterator_tag : public bidirectional_iterator_tag {};
+// 这些classes只作为标记用，帮助函数重载进行区分，所以不需要任何成员
 
 // iterator 模板
 template <class Category, class T, class Distance = ptrdiff_t,
@@ -34,14 +35,14 @@ struct iterator
 // iterator traits
 
 template <class T>
-struct has_iterator_cat
+struct has_iterator_cat // cat for category
 {
   private:
     struct two {char a; char b;};
     template <class U> static two test(...);
     template <class U> static char test(typename U::iterator_category* = 0);
   public:
-    static const bool value = sizeof(test<T>(0)) == sizeof(char);
+    static const bool value = sizeof(test<T>(0)) == sizeof(char); // SFINAE(Substitution Failure Is Not An Error) 技术来检查一个类型'T'是否拥有特定的成员函数或成员变量, 如果拥有iterator_category成员，则会通过SFINAE匹配到返回值为char的test，否则匹配到返回值为two的test，这样就区分出来是否有iterator_category
 };
 
 template <class Iterator, bool>
