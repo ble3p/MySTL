@@ -35,7 +35,7 @@ namespace MyStl
   }
 
 
-  template <class Ty, class ...Args>
+  template <class Ty, class... Args>
   void construct(Ty *ptr, Args &&... args)
   {
     ::new ((void*)ptr) Ty(MyStl::forward<Args>(args)...);
@@ -76,7 +76,7 @@ namespace MyStl
   template <class ForwardIter>
   void destroy(ForwardIter first, ForwardIter last)
   {
-    destroy_one(first, last, std::is_trivially_destructible<
+    destroy_cat(first, last, std::is_trivially_destructible<
         typename iterator_traits<ForwardIter>::value_type>{});
   }
 
