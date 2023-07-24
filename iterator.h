@@ -80,7 +80,6 @@ struct iterator_traits
 template <class T>
 struct iterator_traits<T*>
 {
-
   typedef random_access_iterator_tag      iterator_category;
   typedef T                               value_type;
   typedef T*                              pointer;
@@ -88,16 +87,73 @@ struct iterator_traits<T*>
   typedef ptrdiff_t                       difference_type;
 };
   
+template <class T>
+struct iterator_traits<const T*>
+{
+  typedef random_access_iterator_tag      iterator_category;
+  typedef T                               value_type;
+  typedef const T*                        pointer;
+  typedef const T&                        reference;
+  typedef ptrdiff_t                       difference_type;
+};
+
+template <class T, class U, bool = has_iterator_cat<iterator_traits<T>>::value>
+struct has_iterator_cat_of
+  : public m_bool_constant<std::is_convertible<
+    typename iterator_traits<T>::iterator_category, U>::value>
+{
+};
+
+// 萃取某种迭代器
+template <class T, class U>
+struct has_iterator_cat_of<T, U, false> : public m_false_type {};
+
+template <class Iter>
+struct is_input_iterator : public has_iterator_cat_of<Iter, input_iterator_tag> {};
 
 
+template <class Iter>
+struct is_output_iterator : public has_iterator_cat_of<Iter, output_iterator_tag> {};
 
+template <class Iter>
+struct is_forward_iterator_iterator : public has_iterator_cat_of<Iter, forward_iterator_tag> {};
 
+template <class Iter>
+struct is_bidirectional_iterator : public has_iterator_cat_of<Iter, bidirectional_iterator_tag> {};
 
+template <class Iter>
+struct is_random_access_iterator : public has_iterator_cat_of<Iter, random_access_iterator_tag> {};
 
+template <class Iterator>
+struct is_iterator:
+  public m_bool_constant<is_input_iterator<Iterator>::value ||
+    is_output_iterator<Iterator>::value>
+{};
 
+// 萃取某个迭代器的 category
+  template <class Iterator>
+typename iterator_traits<Iterator>::iterator_category
+iterator_category(const Iterator&)
+{
+  typedef typename iterator_traits<Iterator>::iterator_category Category;
+  return Category();
+}
 
+// 萃取某个迭代器的 distance_type
+template <class Iterator>
+typename iterator_traits<Iterator>::distance_type*
+distance_type(const Iterator&)
+{
+    return static_cast<typename iterator_traits<Iterator>::difference_type*>(0);
+}
 
-
+// 萃取某个迭代器的 value_type
+template <class Iterator>
+typename iterator_traits<Iterator>::value_type*
+value_type(const Iterator&)
+{
+  return static_cast<typename iterator_traits<Iterator>::value_type*>(0);
+}
 
 
 
