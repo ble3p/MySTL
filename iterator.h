@@ -158,34 +158,7 @@ value_type(const Iterator&)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif
+
