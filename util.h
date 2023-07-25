@@ -59,6 +59,56 @@ namespace MyStl
 
   //----------------------------------------------------------------------------------
 
+  // 结构体模板 :pari
+  // 用first和second来分别取出第一个数据和第二个数据
+  template <class Ty1, class Ty2>
+  struct pair
+  {
+    typedef Ty1       first_type;
+    typedef Ty2       second_type;
+
+    first_type first;
+    second_type second;
+
+    // default_constructiable
+    template <class Other1 = Ty1, class Other2 = Ty2,
+      typename std::enable_if<
+       std::is_default_constructible<Other1>::value&&
+       std::is_default_constructible<Other2>::value, void>::type>
+       constexpr pair()
+       : first(), second()
+   {
+   }
+
+    // implicit_constructiable for this type
+  // 使用const U1& 作为参数的原因是为了确保在进行隐式转换时不会产生不必要的副作用。当U1类型作为构造函数参数时，如果U1是一个非常量类型，而Ty1是一个常量类型，编译器可能会进行隐式转换，但这可能会产生副作用，因为常量类型无法修改。通过const U1&，我们告诉编译器我们希望检查的是U1类型的常量引用是否可以隐式转换为Ty1类型，这样可以避免不必要的副作用
+    template <class U1 = Ty1, class U2 = Ty2,
+      typename std::enable_if<
+       std::is_copy_constructible<U1>::value &&
+       std::is_copy_constructible<U2>::value &&
+       std::is_convertible<const U1&, Ty1>::value && //是否可以隐式转换
+       std::is_convertible<const U2&, Ty2>::value, int>::type = 0> 
+       constexpr pair(const Ty1 &a, const Ty2 &b)
+       : first(a), second(b)
+   {
+   }
+
+    template <class U1 = Ty1, class U2 = Ty2,
+      typename std::enable_if<
+      std::is_copy_constructible<U1>::value &&
+      std::is_copy_constructible<U2>::value &&
+      (!std::is_convertible<const U1&, Ty2>::value ||
+       !std::is_convertible<const U2&, Ty2>::value), int>::type = 0>
+      explicit constexpr pair(const Ty1 &a, const Ty2 &b)
+      : first(a), second(b)
+    {
+    }
+
+
+
+      
+  };// struct pair
+
 
 
 
