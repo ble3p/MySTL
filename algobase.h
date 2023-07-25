@@ -106,15 +106,27 @@ unchecked_copy(InputIter first, InputIter last, OutputIter result)
   return unchecked_copy_cat(first, last, result, iterator_category(first));
 }
 
+// 为trivially_copy_assignable 类型提供特化版本
+template <class Tp, class Up>
+typename std::enable_if< // SFINAE 技术
+  std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
+  std::is_trivially_copy_assignable<Up>::value,
+  Up*>::type // 条件编译，只有满足条件才能使用这个函数
+unchecked_copy(Tp * first, Tp* last, Up* result)
+{
+  const auto n = static_cast<size_t>(last - first);
+  if (n != 0)
+    std::memmove(result, first, n * sizeof(Up));
+  return result + n;
+}
 
 
-
-
-
-
-
-
-
+template <class InputIter, class OutputIter>
+OutputIter
+copy(InputIter first, InputIter last, OutputIter result)
+{
+  return unchecked_copy(first, last, result);
+}
 
 
 /*****************************************************************************************/
