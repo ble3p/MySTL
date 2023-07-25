@@ -108,6 +108,7 @@ struct has_iterator_cat_of
 template <class T, class U>
 struct has_iterator_cat_of<T, U, false> : public m_false_type {};
 
+// 每一个都有一个value代表true或者false, 并且最终都会继承到type_traits中的m_integral_constant,类中只包含一个bool值，在不断向上继承的过程中由std::is_convertible通过比较萃取出来的iterator_category和给定的category_tag是否一致来决定bool值是true还是false
 template <class Iter>
 struct is_input_iterator : public has_iterator_cat_of<Iter, input_iterator_tag> {};
 
@@ -136,7 +137,7 @@ typename iterator_traits<Iterator>::iterator_category
 iterator_category(const Iterator&)
 {
   typedef typename iterator_traits<Iterator>::iterator_category Category;
-  return Category();
+  return Category(); // 并不是一个函数调用，而是通过Category类型的默认构造函数来创建一个Category类型的对象并返回，默认构造函数可能没有任何具体的实现。因此，这个操作实际上是在返回一个表示迭代器类别的对象，而不是调用任何函数
 }
 
 // 萃取某个迭代器的 distance_type

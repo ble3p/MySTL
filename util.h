@@ -37,6 +37,7 @@ namespace MyStl
   template <class Tp>
   void swap(Tp &lhs, Tp &rhs)
   {
+    // 使用移动构造函数和移动赋值运算符
     auto tmp(MyStl::move(lhs));
     lhs = MyStl::move(rhs);
     rhs = MyStl::move(tmp);
