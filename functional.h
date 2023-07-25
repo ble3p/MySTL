@@ -1,0 +1,3 @@
+#ifndef MYSTL_FUNCTIONAL_H_
+#define MYSTL_FUNCTIONAL_H_
+#endif
