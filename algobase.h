@@ -209,16 +209,203 @@ copy_if(InputIter first, InputIter last, OutputIter result, UnaryPredicate unary
 // 把[first, first + n)区间上的元素拷贝到 [result, result + n) 上\
 // 返回一个pair分别指向拷贝结束的尾部
 /*****************************************************************************************/
-// template <class InputIter, class OutputIter, class Size>
-// MyStl::pair<InputIter, OutputIter>
-// unchecked_copy_n(InputIter first, Size n, OutputIter result, MyStl::input_iterator_tag)
-// {
 
-// }
+template <class InputIter, class Size, class OutputIter>
+MyStl::pair<InputIter, OutputIter>
+unchecked_copy_n(InputIter first, Size n, OutputIter result, MyStl::input_iterator_tag)
+{
+    for (;n > 0; --n)
+    {
+        *result = *first;
+    }
+    return MyStl::pair<InputIter,OutputIter>(first, result);
+}
+
+
+template <class RandomIter, class Size, class OutputIter>
+MyStl::pair<RandomIter, OutputIter>
+unchecked_copy_n(RandomIter first, Size n, OutputIter result, MyStl::random_access_iterator_tag)
+{
+    auto last = first + n;
+    return MyStl::pair<RandomIter, OutputIter>(last, MyStl::copy(first, last, result));
+}
+
+template <class InputIter, class Size, class OutputIter>
+MyStl::pair<InputIter, OutputIter>
+copy_n(InputIter first, Size n, OutputIter result)
+{
+    return unchecked_copy_n(first, n, result, iterator_category(first));
+}
+
+
+
+/*****************************************************************************************/
+// move
+// 把 [first, last) 区间内的元素移动到 [result , result + (last - first)) 内 
+/*****************************************************************************************/
+
+template <class InputIter, class OutputIter>
+OutputIter
+unchecked_move_cat(InputIter first ,InputIter last, OutputIter result, input_iterator_tag)
+{
+    for (; first != result; ++first, ++result)
+    {
+        *result = MyStl::move(*first);
+    }
+    return result;
+}
+
+
+template <class RandomIter, class OutputIter>
+OutputIter
+unchecked_move_cat(RandomIter first ,RandomIter last, OutputIter result, random_access_iterator_tag)
+{
+    for (auto n = last - first; n > 0; --n, ++first, ++ result)
+    {
+        *result = MyStl::move(*first);
+    }
+    return result;
+}
+
+template <class InputIter, class OutputIter>
+OutputIter
+unchecked_move(InputIter first, InputIter last, OutputIter result)
+{
+    return unchecked_move_cat(first, last, result, iterator_category(first));
+}
+
+
+// 为trivially_copy_assignable 类型提供特化版本
+template <class Tp, class Up>
+typename std::enable_if<
+    std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
+    std::is_trivially_copy_assignable<Up>::value,
+    Up*>::type
+unchecked_move(Tp *first, Tp *last, Up* result)
+{
+    const size_t n = static_cast<size_t>(last - first);
+    if (n != 0)
+        std::memmove(result, first, n*sizeof(Up));
+    return result + n;
+}
+
+template <class InputIter, class OutputIter>
+OutputIter
+move(InputIter first, InputIter last, OutputIter result)
+{
+    return unchecked_move(first, last, result);
+}
+
+
+/*****************************************************************************************/
+// move_backward
+// 将 [first, last) 区间内的元素移动到[result - (last - fist), result) 内
+/*****************************************************************************************/
+
+template <class BidrectionalIter1, class BidrectionalIter2>
+BidrectionalIter2
+unchecked_move_backward_cat(BidrectionalIter1 first, BidrectionalIter1 last,
+                            BidrectionalIter2 result, MyStl::bidirectional_iterator_tag)
+{
+    while(first != last)
+        *--result = MyStl::move(*--last);
+    return result;
+}
+
+template <class RandomIter1, class RandomIter2>
+RandomIter2
+unchecked_move_backward_cat(RandomIter1 first, RandomIter1 last,
+                            RandomIter2 result, MyStl::random_access_iterator_tag)
+{
+    for (auto n = last - result; n > 0; --n )
+        *--result = MyStl::move(*--last);
+    return result;
+}
+
+template <class BidrectionalIter1, class BidrectionalIter2>
+BidrectionalIter2
+unchecked_move_backward(BidrectionalIter1 first, BidrectionalIter1 last, BidrectionalIter2 result)
+{
+    return unchecked_move_backward_cat(first, last, result, iterator_category(first));
+}
+
+// 为 trivially_copy_assignable 类型提供特化版本
+template<class Tp, class Up>
+typename std::enable_if<
+    std::is_same<typename std::remove_reference<Tp>::type, Up>::value &&
+    std::is_trivially_copy_assignable<Up>::value,
+    Up*>::value
+unchecked_move_backward(Tp *first, Tp *last, Up *result)
+{
+    const size_t n = static_cast<size_t>(last- first);
+    if (n != 0)
+    {
+        result -= n;
+        std::memmove(result - n, first, sizeof(result) * n);
+    }
+    return result;
+}
+
+template <class BidrectionalIter1, class BidrectionalIter2>
+BidrectionalIter2
+move_backward(BidrectionalIter1 first, BidrectionalIter1 last, BidrectionalIter2 result)
+{
+    return unchecked_move_backward(first, last, result);
+
+}
 /*****************************************************************************************/
 // min
 // 取两者中的较小值，语义相等时保证返回第一个参数
 /*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
+
+/*****************************************************************************************/
+// min
+// 取两者中的较小值，语义相等时保证返回第一个参数
+/*****************************************************************************************/
+
 
 
 
