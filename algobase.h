@@ -85,7 +85,7 @@ unchecked_copy_cat(InputIter first, InputIter last, OutputIter result,
   return result;
 }
 
-// random_access_interator_tag
+// random_access_iterator_tag
 template <class RandomIter, class OutputIter>
 OutputIter
 unchecked_copy_cat(RandomIter first, RandomIter last, OutputIter result,
@@ -354,29 +354,131 @@ move_backward(BidrectionalIter1 first, BidrectionalIter1 last, BidrectionalIter2
 
 }
 /*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
+// equal
+// 比较第一序列在 [first, last)区间上的元素值是否和第二序列相等
 /*****************************************************************************************/
+template <class InputIter1, class InputIter2>
+bool equal(InputIter1 first, InputIter1 last, InputIter2 first2)
+{
+    for (; first != last; ++first, ++first2)
+    {
+        if (*first != *first2)
+            return false;
+    }
+    return true;
+}
+
+template <class InputIter1, class InputIter2, class Compare>
+bool equal(InputIter1 first, InputIter1 last, InputIter2 first2, Compare comp)
+{
+    for (; first != last; ++first, ++first2)
+    {
+        if (!comp(*first, *first2))
+            return false;
+    }
+    return true;
+}
 
 
 /*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
+// fill_n
+// 从 first 位置开始填充n个值
 /*****************************************************************************************/
+template <class OutputIter, class Size, class T>
+OutputIter unchecked_fill_n(OutputIter first, Size t, const T &value)
+{
+    for (;t > 0; --t, ++first)
+    {
+        *first = value;
+    }
+    return first;
+}
+
+// 为one-byte类型提供特化版本
+// 问是否是整形 char
+template <class Tp, class Size, class Up>
+typename std::enable_if<
+    std::is_integral<Tp>::value && sizeof(Tp) == 1 &&
+    !std::is_same<Tp,bool>::value &&
+    std::is_integral<Up>::value && sizeof(Up) == 1,
+    Tp*>::type
+unchecked_fill_n(Tp *first, Size t, Up value)
+{
+    if (t > 0)
+    {
+        std::memset(first, (unsigned char)value, (size_t)(t));
+    }
+    return first + t;
+
+}
+
+template <class OutputIter, class Size, class T>
+OutputIter fill_n(OutputIter first, Size t, const T &value)
+{
+    return unchecked_fill_n(first, t, value);
+}
+
+/*****************************************************************************************/
+// fill
+// 为 [first, last) 区间内的所有元素填充新值
+/*****************************************************************************************/
+template <class ForwardIter, class T>
+void fill_cat(ForwardIter first, ForwardIter last, const T &value, MyStl::forward_iterator_tag)
+{
+    for (; first != last; ++first)
+        *first = value;
+}
+
+template <class RandomIter, class T>
+void fill_cat(RandomIter first, RandomIter last, const T &value, MyStl::random_access_iterator_tag)
+{
+    fill_n(first, last - first, value);
+}
+
+template <class ForwardIter, class T>
+void fill(ForwardIter first, ForwardIter last, const T &value)
+{
+    fill_cat(first, last, value, iterator_category(first));
+}
 
 
 /*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
+// lexico'graphical_compare 
+// sorted in a way that uses a algorithm based on the alphabetical order used in dictionaries
+// 两者不一定同大小，故需要两者都提供first和last
+// 如果第一序列的元素较小， 返回true， 否则返回false
 /*****************************************************************************************/
+template <class InputIter1, class InputIter2>
+bool lexicographical_compare(InputIter1 first1, InputIter1 last1,
+                             InputIter2 first2, InputIter2 last2)
+{
+    for (; first1 != last1 && first2 != last2; ++first1, ++first2)
+    {
+        if (*first1 < *first2)
+            return true;
+        else if (*first1 > *first2)
+            return false;
+    }
+    return first1 == last1 && first2 != last2;
+}
 
+template <class InputIter1, class InputIter2, class Compare>
+bool lexicographical_compare(InputIter1 first1, InputIter1 last1,
+                             InputIter2 first2, InputIter2 last2, Compare comp)
+{
+    for (; first1 != last1 && first2 != last2; ++first1, ++first2)
+    {
+        if (comp(*first1,*first2))
+            return true;
+        else if (comp(*first2, *first1))
+            return false;
+    }
+    return first1 == last1 && first2 != last2;
+}
 
-/*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
-/*****************************************************************************************/
-
-
+// 针对const ungined char* 的特化版本
+// bool lexicographical_compare(const unsigned char *first1,
+                             //const unsigned char *last1)
 /*****************************************************************************************/
 // min
 // 取两者中的较小值，语义相等时保证返回第一个参数
