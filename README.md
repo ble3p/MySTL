@@ -1,6 +1,13 @@
 # MySTL
 C++ implement subset of STL
 
+## TODO
+
+- [] memory.h 和 文件框架梳理
+- [] uninitialiazed.h 和文件框架梳理
+- [] testing file 用来测试algobase.h 中的基础算法
+- [] util.h iterator.h type_traits.h construct.h allocate.h 梳理
+
 ## 关于util.h       
 
 
