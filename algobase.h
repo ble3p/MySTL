@@ -476,229 +476,51 @@ bool lexicographical_compare(InputIter1 first1, InputIter1 last1,
     return first1 == last1 && first2 != last2;
 }
 
-// 针对const ungined char* 的特化版本
-// bool lexicographical_compare(const unsigned char *first1,
-                             //const unsigned char *last1)
-/*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
-/*****************************************************************************************/
-
-
-/*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
-/*****************************************************************************************/
-
-
-/*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
-/*****************************************************************************************/
-
-
-/*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
-/*****************************************************************************************/
-
-
-/*****************************************************************************************/
-// min
-// 取两者中的较小值，语义相等时保证返回第一个参数
-/*****************************************************************************************/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 针对const ungined char* 的特化版本, 通过std
+bool lexicographical_compare(const unsigned char *first1,
+                             const unsigned char *last1,
+                             const unsigned char *first2,
+                             const unsigned char *last2)
+{
+    const auto len1 = last1 - first1;
+    const auto len2 = last2 - first2;
+    // 先比较相同长度的部分
+    const auto result = std::memcmp(first1, first2, MyStl::min(len1, len2));
+    // first1 > first2 result > 0
+    // first1 < first2 result < 0
+    // 若相等， 长度较长的比较大
+    return result != 0 ? result < 0 : len1 < len2;
+    // 结果导向理解， 若结果不等于零，就期望他小于0，否则就期望他长度比较小，一种逻辑相当优雅且容易理解的方式
 }
+/*****************************************************************************************/
+// mismatch
+// 平行比较两个序列，找到第一处失配的元素， 返回一对迭代器， 分别指向两个序列中失配的元素
+template <class InputIter1, class InputIter2>
+MyStl::pair<InputIter1, InputIter2>
+mismatch(InputIter1 first1, InputIter1 last1, InputIter2 first2)
+{
+    while (first1 != last1 && *first1 == *first2)
+    {
+        ++first1;
+        ++first2;
+    }
+    return MyStl::pair<InputIter1, InputIter2>(first1, first2);
+}
+
+template <class InputIter1, class InputIter2, class Compare>
+MyStl::pair<InputIter1, InputIter2>
+mismatch(InputIter1 first1, InputIter1 last1, InputIter2 first2, Compare comp)
+{
+    while (first1 != last1 && comp(*first1, *first2))
+    {
+        ++first1;
+        ++first2;
+    }
+    return MyStl::pair<InputIter1, InputIter2>(first1, first2);
+}
+/*****************************************************************************************/
+} // namespace MyStl
+
+
 
 #endif

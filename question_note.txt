@@ -1,0 +1,4 @@
+关于move 和 copy函数是否有必要去特化random_access_iterator_tag
+
+fill函数为什么从forward_iterator_tag开始,为什么返回void, 是因为规格书吗, 是因为没更新c++11标准？ fill_n在没更新c++11标准前也不不返回void的
+
