@@ -108,7 +108,7 @@ struct iterator_traits_impl<Iterator, true>
 
     以is_input_iterator为例，其他类型均为如此
 
-    is_input_iterator --->[true] has_iterator_cat_of<Iterator, input_iterator_tag, bool = has_iterator_cat<iterator_traits<T>>::value(true) --->[true] m_bool_constant<true> (来自traits_type.h) ---> [true]  ---- m_integral_constant<bool, bool true>
+    is_input_iterator --->[true] has_iterator_cat_of<Iterator, input_iterator_tag, bool = has_iterator_cat<iterator_traits<T>>::value(true) --->[true] m_bool_constant<true> (来自type_traits.h) ---> [true]  ---- m_integral_constant<bool, bool true>
 
 3. 关于萃取函数 
 

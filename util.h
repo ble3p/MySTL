@@ -97,7 +97,7 @@ namespace MyStl
       typename std::enable_if<
       std::is_copy_constructible<U1>::value &&
       std::is_copy_constructible<U2>::value &&
-      (!std::is_convertible<const U1&, Ty2>::value ||
+      (!std::is_convertible<const U1&, Ty1>::value ||
        !std::is_convertible<const U2&, Ty2>::value), int>::type = 0>
       explicit constexpr pair(const Ty1 &a, const Ty2 &b)
       : first(a), second(b)

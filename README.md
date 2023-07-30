@@ -6,9 +6,11 @@ C++ implement subset of STL
 - [ ] memory.h 和 文件框架梳理
 - [ ] uninitialiazed.h 和文件框架梳理
 - [ ] testing file 用来测试algobase.h 中的基础算法
-- [ ] util.h iterator.h type_traits.h construct.h allocate.h 梳理
+- [x] util.h iterator.h type_traits.h construct.h allocate.h 梳理
 
-## 关于util.h       
+​    
+
+## 概念解释
 
 
 ### 引用折叠
@@ -46,13 +48,24 @@ move(T &&arg) noexcept
 ### 完美传递
 
 
+## 文件说明
 
-## 关于iterator.h
+### 关于iterator.h
 
 [iterator.md](./iterator.md)
 
-### 萃取器的调用逻辑
+### 关于type_traits.h
 
-### 其他萃取器
+[type_traits.h](./type_traits.md)
 
-## 关于type_traits.h
+### 关于util.h  
+
+[util.h](./util.md)
+
+### 关于 construct.h
+
+[construct.h](./construct.md)
+
+### 关于 allocator.h
+
+[allocator.h](./allocator.md)
