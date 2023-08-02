@@ -390,19 +390,217 @@ find_first_of(InputIter first1, InputIter last1,
               ForwardIter first2, ForwardIter last2)
 {
     // search只提供了双方都是ForwardITer版本的迭代器版本
+    for(; first1 != last1; ++first1)
+    {
+        for (auto current = first2; current != last2; ++current)
+        {
+            if (*first1 == *current)
+                return first1;
+        }
+    }
+    return last1;
+}
 
-
+template <class InputIter, class ForwardIter, class Compare>
+InputIter
+find_first_of(InputIter first1, InputIter last1,
+              ForwardIter first2, ForwardIter last2, Compare comp)
+{
+    // search只提供了双方都是ForwardITer版本的迭代器版本
+    for(; first1 != last1; ++first1)
+    {
+        for (auto current = first2; current != last2; ++current)
+        {
+            if (comp(*first1, *current))
+                return first1;
+        }
+    }
+    return last1;
 }
 
 
+/*****************************************************************************************/
+// for_each
+// 使用一个函数对象 f 对[first, last)区间内的每个元素执行一个 operator() 操作，但不能改变元素内容
+// f() 可返回一个值，但该值会被忽略
+/*****************************************************************************************/
+template <class InputIter, class Function>
+Function
+for_each(InputIter first, InputIter last, Function f)
+{
+    for (; first != last; ++first)
+    {
+        f(*first);
+    }
+    return f;
+}
+
+/*****************************************************************************************/
+// adjacent_find
+// 找出第一对匹配的相邻元素，缺省使用 operator== 比较，如果找到返回一个迭代器，指向这对元素的第一个元素
+/*****************************************************************************************/
+template <class ForwardIter>
+ForwardIter
+adjacent_find(ForwardIter first, ForwardIter last)
+{
+    if (first == last) return last;
+    auto next = first;
+    while (++next != last)
+    {
+        if (*first == *next) return first;
+        first = next;
+    }
+    return last;
+}
+
+template <class ForwardIter, class Compare>
+ForwardIter
+adjacent_find(ForwardIter first, ForwardIter last, Compare comp)
+{
+    if (first == last) return last;
+    auto next = first;
+    while (++next != last)
+    {
+        if (comp(first, next))
+            return first;
+        first = next;
+    }
+    return last;
+}
+
+/*****************************************************************************************/
+// lower_bound
+// 在[first, last)中查找第一个不小于 value 的元素，并返回指向它的迭代器，若没有则返回 last
+// The elements in the range shall already be sorted according to this same criterion or at least partitioned with respect to val
+/*****************************************************************************************/
+// lbound_dispatch 的 forward_iterator_tag 版本
+template <class ForwardIter, class T>
+ForwardIter
+lbound_dispatch(ForwardIter first, ForwardIter last, const T &value, forward_iterator_tag)
+{
+    // 二分查找法
+    auto len = MyStl::distance(first, last);
+    auto half = len;
+    ForwardIter middle;
+    while (len > 0)
+    {
+        half = len >> 1;
+        middle = first;
+        MyStl::advance(middle, half);
+        if (*middle < value)
+        {
+            first = middle;
+            ++first;
+            len = len - half - 1;
+
+        }
+        else
+        {
+            len = half;
+        }
+        return first;
+    }
+}
+
+template <class RandomIter, class T>
+RandomIter
+lbound_dispatch(RandomIter first, RandomIter last, const T &value, random_access_iterator_tag)
+{
+
+    auto len = last - first;
+    auto half = len;
+    RandomIter middle;
+    while (len > 0)
+    {
+        half = len >> 1;
+        middle = first + half;
+        if (*middle < value)
+        {
+            first = middle + 1;
+            len = len - half - 1;
+        }
+        else
+        {
+            len = half;
+        }
+        
+    }
+    return first;
+}
+
+template <class ForwardIter, class T>
+ForwardIter
+lower_bound(ForwardIter first, ForwardIter last, const T& value)
+{
+    return MyStl::lbound_dispatch(first, last, value, iterator_category(first));
+}
 
 
+template <class ForwardIter, class T, class Compare>
+ForwardIter
+lbound_dispatch(ForwardIter first, ForwardIter last, const T &value, forward_iterator_tag, Compare comp)
+{
+    // 二分查找法
+    auto len = MyStl::distance(first, last);
+    auto half = len;
+    ForwardIter middle;
+    while (len > 0)
+    {
+        half = len >> 1;
+        middle = first;
+        MyStl::advance(middle, half);
+        if (comp(*middle, value))
+        {
+            first = middle + 1;
+            len = len - half - 1;
+
+        }
+        else
+        {
+            len = half;
+        }
+        return first;
+    }
+}
+
+template <class RandomIter, class T, class Compare>
+RandomIter
+lbound_dispatch(RandomIter first, RandomIter last, const T &value, random_access_iterator_tag, Compare comp)
+{
+
+    auto len = last - first;
+    auto half = len;
+    RandomIter middle;
+    while (len > 0)
+    {
+        half = len >> 1;
+        middle = first + half;
+        if (comp(*middle, value))
+        {
+            first = middle + 1;
+            len = len - half - 1;
+        }
+        else
+        {
+            len = half;
+        }
+        
+    }
+    return first;
+}
+
+template <class ForwardIter, class T, class Compare>
+ForwardIter
+lower_bound(ForwardIter first, ForwardIter last, const T& value, Compare comp)
+{
+    return MyStl::lbound_dispatch(first, last, value, iterator_category(first), comp);
+}
 
 
-
-
-
-
+/*****************************************************************************************/
+// upper_bound
+// 在[first, last)中查找第一个大于value 的元素，并返回指向它的迭代器，若没有则返回 last
+/*****************************************************************************************/
 
 
 
