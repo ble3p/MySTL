@@ -380,6 +380,20 @@ find_end(ForwardIter1 first1, ForwardIter2 last1,
     return MyStl::find_end_dispatch(first1, last1, first2, last2, Category1(), Category2(), comp);
 }
 
+/*****************************************************************************************/
+// find_first_of
+// 在[first1, last1)中查找[first2, last2)中的某些元素，返回指向第一次出现的元素的迭代器
+/*****************************************************************************************/
+template <class InputIter, class ForwardIter>
+InputIter
+find_first_of(InputIter first1, InputIter last1,
+              ForwardIter first2, ForwardIter last2)
+{
+    // search只提供了双方都是ForwardITer版本的迭代器版本
+
+
+}
+
 
 
 
