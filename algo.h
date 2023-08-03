@@ -602,17 +602,188 @@ lower_bound(ForwardIter first, ForwardIter last, const T& value, Compare comp)
 // 在[first, last)中查找第一个大于value 的元素，并返回指向它的迭代器，若没有则返回 last
 /*****************************************************************************************/
 
+// ubound_dispatch的forward_iterator_tag版本
+template <class ForwardIter, class T>
+ForwardIter
+ubound_dispatch(ForwardIter first, ForwardIter last, const T &value, forward_iterator_tag)
+{
+    if (first == last) return last;
+    auto len = MyStl::distance(first, last);
+    ForwardIter middle;
+    auto half = len;
+    while(len > 0)
+    {
+        half = len >> 1;
+        middle = first;
+        MyStl::advance(middle, half);
+        if (*middle <= value)
+        {
+            first = middle + 1;
+            len = len - half - 1;
+        }
+        else
+        {
+            len = len - half;
+
+        }
+    }
+    return first;
+}
 
 
+// ubound_dispatch的random_access_iterator_tag版本
+template <class RandomIter, class T>
+RandomIter
+ubound_dispatch(RandomIter first, RandomIter last, const T &value, random_access_iterator_tag)
+{
+    if (first == last) return last;
+    auto len = MyStl::distance(first, last);
+    auto half = len;
+    RandomIter middle;
+    while (len > 0)
+    {
+        half = len >> 1;
+        middle = first;
+        MyStl::advance(middle, half);
+        if (*middle <= value)
+        {
+            first = middle + 1;
+            len = len - half - 1;
+        }
+        else
+        {
+            len = len - half;
+        }
+    }
+    return first;
+}
+
+template <class ForwardIter, class T>
+ForwardIter
+upper_bound(ForwardIter first, ForwardIter last, const T &value)
+{
+    return MyStl::ubound_dispatch(first, last, value, iterator_category(first));
+}
 
 
+template <class ForwardIter, class T, class Compare>
+ForwardIter
+ubound_dispatch(ForwardIter first, ForwardIter last, const T &value, forward_iterator_tag, Compare comp)
+{
+    if (first == last) return last;
+    auto len = MyStl::distance(first, last);
+    ForwardIter middle;
+    auto half = len;
+    while(len > 0)
+    {
+        half = len >> 1;
+        middle = first;
+        MyStl::advance(middle, half);
+        if (comp(value, *middle))
+        {
+            len = len - half;
+        }
+        else
+        {
+            first = middle + 1;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
 
 
+// ubound_dispatch的random_access_iterator_tag版本
+template <class RandomIter, class T, class Compare> // 小于为true
+RandomIter
+ubound_dispatch(RandomIter first, RandomIter last, const T &value, random_access_iterator_tag, Compare comp)
+{
+    if (first == last) return last;
+    auto len = MyStl::distance(first, last);
+    auto half = len;
+    RandomIter middle;
+    while (len > 0)
+    {
+        half = len >> 1;
+        middle = first;
+        MyStl::advance(middle, half);
+        if (comp(value, *middle))
+        {
+            len = len - half;
+        }
+        else
+        {
+            first = middle + 1;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template <class ForwardIter, class T, class Compare>
+ForwardIter
+upper_bound(ForwardIter first, ForwardIter last, const T &value, Compare comp)
+{
+    return MyStl::ubound_dispatch(first, last, value, iterator_category(first), comp);
+}
 
 
+/*****************************************************************************************/
+// binary_search
+// 二分查找，如果在[first, last)内有等同于 value 的元素，返回 true，否则返回 false
+/*****************************************************************************************/
+
+template <class ForwardIter, class T>
+bool binary_search(ForwardIter first, ForwardIter last, const T &value)
+{
+    auto res = MyStl::lower_bound(first, last, value);
+    return res != last && *res == value; 
+}
+
+template <class ForwardIter, class T, class Compare>
+bool binary_search(ForwardIter first, ForwardIter last, const T &value, Compare comp) // comp 小于为true
+{
+    auto res = MyStl::lower_bound(first, last, value);
+    return res != last && !comp(value, *res); 
+}
 
 
+/*****************************************************************************************/
+// equal_range
+// 查找[first,last)区间中与 value 相等的元素所形成的区间，返回一对迭代器指向区间首尾
+// 第一个迭代器指向第一个不小于 value 的元素，第二个迭代器指向第一个大于 value 的元素
+/*****************************************************************************************/
+// erange_dispatch 的 forward_iterator_tag 版本
+template <class ForwardITer, class T>
+MyStl::pair<ForwardITer, ForwardITer>
+erange_dispatch(ForwardITer first, ForwardITer last, const T &value, forward_iterator_tag)
+{
+    auto iter1 = MyStl::lower_bound(first, last, value);
+    if (iter1 == last) return pair<ForwardITer, ForwardITer>(last, last);
+    auto iter2 = MyStl::upper_bound(first, last, value);
+    return pair<ForwardITer, ForwardITer>(iter1, iter2);
 
+}
+
+// erange_dispatch 的 random_access_iterator_tag 版本
+
+template <class RandomIter, class T>
+MyStl::pair<RandomIter, RandomIter>
+erange_dispatch(RandomIter first, RandomIter last, const T &value, random_access_iterator_tag)
+{
+    auto iter1 = MyStl::lower_bound(first, last, value);
+    if (iter1 == last) return pair<RandomIter, RandomIter>(last, last);
+    auto iter2 = MyStl::upper_bound(first, last, value);
+    return pair<RandomIter, RandomIter>(iter1, iter2);
+
+}
+
+template <class ForwardITer, class T>
+MyStl::pair<ForwardITer, ForwardITer>
+equal_range(ForwardITer first, ForwardITer last, const T &value)
+{
+    return erange_dispatch(first, last, value, iterator_category(first));
+}
 
 
 
