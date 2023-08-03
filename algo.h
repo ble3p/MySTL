@@ -389,7 +389,7 @@ InputIter
 find_first_of(InputIter first1, InputIter last1,
               ForwardIter first2, ForwardIter last2)
 {
-    // search只提供了双方都是ForwardITer版本的迭代器版本
+    // search只提供了双方都是ForwardIter版本的迭代器版本
     for(; first1 != last1; ++first1)
     {
         for (auto current = first2; current != last2; ++current)
@@ -406,7 +406,7 @@ InputIter
 find_first_of(InputIter first1, InputIter last1,
               ForwardIter first2, ForwardIter last2, Compare comp)
 {
-    // search只提供了双方都是ForwardITer版本的迭代器版本
+    // search只提供了双方都是ForwardIter版本的迭代器版本
     for(; first1 != last1; ++first1)
     {
         for (auto current = first2; current != last2; ++current)
@@ -785,10 +785,121 @@ equal_range(ForwardITer first, ForwardITer last, const T &value)
     return erange_dispatch(first, last, value, iterator_category(first));
 }
 
+// erange_dispatch 的 forward_iterator_tag 版本
+template <class ForwardITer, class T, class Compare>
+MyStl::pair<ForwardITer, ForwardITer>
+erange_dispatch(ForwardITer first, ForwardITer last, const T &value, forward_iterator_tag, Compare comp)
+{
+    auto iter1 = MyStl::lower_bound(first, last, value, comp);
+    if (iter1 == last) return pair<ForwardITer, ForwardITer>(last, last);
+    auto iter2 = MyStl::upper_bound(first, last, value, comp);
+    return pair<ForwardITer, ForwardITer>(iter1, iter2);
+
+}
+
+// erange_dispatch 的 random_access_iterator_tag 版本
+
+template <class RandomIter, class T, class Compare>
+MyStl::pair<RandomIter, RandomIter>
+erange_dispatch(RandomIter first, RandomIter last, const T &value, random_access_iterator_tag, Compare comp)
+{
+    auto iter1 = MyStl::lower_bound(first, last, value, comp);
+    if (iter1 == last) return pair<RandomIter, RandomIter>(last, last);
+    auto iter2 = MyStl::upper_bound(first, last, value, comp);
+    return pair<RandomIter, RandomIter>(iter1, iter2);
+
+}
+
+template <class ForwardITer, class T, class Compare>
+MyStl::pair<ForwardITer, ForwardITer>
+equal_range(ForwardITer first, ForwardITer last, const T &value, Compare comp)
+{
+    return erange_dispatch(first, last, value, iterator_category(first), comp);
+}
 
 
+/*****************************************************************************************/
+// generate
+// 将函数对象 gen 的运算结果对[first, last)内的每个元素赋值
+/*****************************************************************************************/
+template <class ForwardIter, class Generator>
+void generate(ForwardIter first, ForwardIter last, Generator gen)
+{
+    for (; first != last; ++first)
+    {
+        *first = gen();
+    }
+}
+
+/*****************************************************************************************/
+// generate_n
+// 用函数对象 gen 连续对 n 个元素赋值
+/*****************************************************************************************/
+template <class ForwardIter, class Size,  class Generator>
+void generator(ForwardIter first, Size n, Generator gen)
+{
+    for (; n > 0; --n, ++first) 
+    {
+        *first = gen();
+    }
+}
 
 
+/*****************************************************************************************/
+// includes
+// 判断序列一S1 是否包含序列二S2, 序列有序
+/*****************************************************************************************/
+
+template <class InputIter1, class InputIter2>
+bool includes(InputIter1 first1, InputIter1 last1,
+              InputIter2 first2, InputIter2 last2)
+{
+    while (first1 != last1 && first2 != last2)
+    {
+        if (*first2 < *first1)
+        {
+            return false;
+        }
+        else if (*first1 < *first2)
+        {
+            ++first1;
+        }
+        else 
+        {
+            ++first1, ++first2;
+        }
+    }
+    return first2 == last2;
+}
+
+template <class InputIter1, class InputIter2, class Compare>
+bool includes(InputIter1 first1, InputIter1 last1,
+              InputIter2 first2, InputIter2 last2, Compare comp)
+{
+    while (first1 != last1 && first2 != last2)
+    {
+        if (comp(*first2 , *first1))
+        {
+            return false;
+        }
+        else if (comp(*first1, *first2))
+        {
+            ++first1;
+        }
+        else
+        {
+            ++first1;
+            ++first2;
+        }
+    }
+    return first2 == last2;
+
+}
+
+/*****************************************************************************************/
+// is_heap
+// 检查[first, last)内的元素是否为一个堆，如果是，则返回 true
+/*****************************************************************************************/
 
 
 
