@@ -901,6 +901,71 @@ bool includes(InputIter1 first1, InputIter1 last1,
 // 检查[first, last)内的元素是否为一个堆，如果是，则返回 true
 /*****************************************************************************************/
 
+template <class RandomIter>
+bool is_heap(RandomIter first, RandomIter last)
+{
+  auto n = MyStl::distance(first, last);
+  auto parent = 0;
+  for (auto child = 1; child < n; ++child)
+  {
+    if (first[parent] < first[child])
+      return false;
+    if ((child & 1) == 0)
+      ++parent;
+  }
+  return true;
+}
+
+// 重载版本使用函数对象 comp 代替比较操作
+template <class RandomIter, class Compared>
+bool is_heap(RandomIter first, RandomIter last, Compared comp)
+{
+  auto n = MyStl::distance(first, last);
+  auto parent = 0;
+  for (auto child = 1; child < n; ++child)
+  {
+    if (comp(first[parent], first[child]))
+      return false;
+    if ((child & 1) == 0)
+      ++parent;
+  }
+  return true;
+}
+
+/*****************************************************************************************/
+// is_sorted
+// 检查[first, last)内的元素是否升序，如果是升序，则返回 true
+/*****************************************************************************************/
+template <class ForwardIter>
+bool is_sorted(ForwardIter first, ForwardIter last)
+{
+  if (first == last)
+    return true;
+  auto next = first;
+  ++next;
+  for (; next != last; first = next, ++next)
+  {
+    if (*next < *first)
+      return false;
+  }
+  return true;
+}
+
+// 重载版本使用函数对象 comp 代替比较操作
+template <class ForwardIter, class Compared>
+bool is_sorted(ForwardIter first, ForwardIter last, Compared comp)
+{
+  if (first == last)
+    return true;
+  auto next = first;
+  ++next;
+  for (; next != last; first = next, ++next)
+  {
+    if (comp(*next, *first))
+      return false;
+  }
+  return true;
+}
 
 
 

@@ -140,6 +140,26 @@ public:
    const_reverse_iterator   rend()            const   noexcept 
    { return const_reverse_iterator(begin()); }
 
+   const_iterator         cbegin()  const noexcept 
+   { return begin(); }
+   const_iterator         cend()    const noexcept
+   { return end(); }
+   const_reverse_iterator crbegin() const noexcept
+   { return rbegin(); }
+   const_reverse_iterator crend()   const noexcept
+   { return rend(); }
+
+   // 容量相关操作
+   bool      empty()    const noexcept
+   { return begin_ == end_; }
+   size_type size()     const noexcept
+   { return static_cast<size_type>(end_ - begin_); }
+   size_type max_size() const noexcept
+   { return static_cast<size_type>(-1) / sizeof(T); }
+   size_type capacity() const noexcept
+   { return static_cast<size_type>(cap_ - begin_); }
+   void      reserve(size_type n);
+   void      shrink_to_fit();
 
 
 
