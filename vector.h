@@ -131,15 +131,16 @@ public:
    const_iterator           end()               const   noexcept 
    { return end_; }
 
+   // 通过对象是否为const选择调用返回的指针是否是const
    reverse_iterator         rbegin()                    noexcept 
-   { return reverse_iterator(end()); }
-   const_reverse_iterator   rbegin()            const   noexcept 
+   { return reverse_iterator(end()); } const_reverse_iterator   rbegin()            const   noexcept 
    { return const_reverse_iterator(end()); }
    reverse_iterator         rend()                      noexcept
    { return reverse_iterator(begin()); }
    const_reverse_iterator   rend()            const   noexcept 
    { return const_reverse_iterator(begin()); }
 
+   // const方法只能调用const方法
    const_iterator         cbegin()  const noexcept 
    { return begin(); }
    const_iterator         cend()    const noexcept
@@ -155,11 +156,179 @@ public:
    size_type size()     const noexcept
    { return static_cast<size_type>(end_ - begin_); }
    size_type max_size() const noexcept
-   { return static_cast<size_type>(-1) / sizeof(T); }
+   { return static_cast<size_type>(-1) / sizeof(T); } // 通过无符号整形-1会转换成最大值来求出最大大小
    size_type capacity() const noexcept
    { return static_cast<size_type>(cap_ - begin_); }
    void      reserve(size_type n);
    void      shrink_to_fit();
+
+   // 访问元素相关操作
+   reference operator [] (size_type n)
+   {
+       MYSTL_DEBUG(n <size());
+       return *(begin_ + n);
+   }
+
+   const_reference operator[] (size_type n) const
+   {
+       MYSTL_DEBUG(n < size());
+       return *(begin_ + n);
+   }
+   reference at(size_type n)
+   {
+       THROW_OUT_OF_RANGE_IF(!(n < size()), "vector<T>::at() subscript out of range!");
+       return (*this)[n];
+   }
+   const_reference at(size_type n) const
+   {
+       THROW_OUT_OF_RANGE_IF(!(n < size()), "vector<T>::at() subscript out of range!");
+       return (*this)[n];
+   }
+
+   reference front()
+   {
+       MYSTL_DEBUG(!empty());
+       return *begin_;
+   }
+   const_reference front() const
+   {
+       MYSTL_DEBUG(!empty());
+       return *begin_;
+   }
+
+   reference back()
+   {
+       MYSTL_DEBUG(!empty());
+       return *(end_ - 1);
+   }
+   const_reference back() const
+   {
+       MYSTL_DEBUG(!empty());
+       return *(end_ - 1);
+   }
+       
+
+   pointer          data()          noexcept { return begin_; }
+   const_pointer    data() const    noexcept { return begin_; }
+
+   // 修改容器相关操作
+
+   // assign
+
+   void assign(size_type n, const value_type &value)
+   {
+       fill_assign(n, value); 
+   }
+
+   template <class Iter, typename std::enable_if<
+       MyStl::is_input_iterator<Iter>::value, int>::type = 0>
+    void assign(Iter first, Iter last)
+    {
+        MYSTL_DEBUG(!(last < first));
+        copy_assign(first, last, iterator_category(first));
+    }
+
+   void assign(std::initializer_list<value_type> il)
+   {
+       copy_assign(il.begin(), il.end(), MyStl::forward_iterator_tag{});
+   }
+
+   // emplate / emplace_back
+
+   template <class ...Args>
+    iterator emplace(const_iterator pos, Args&& ...args);
+
+   template <class ...Args>
+    void emplace_back(Args&& ...args);
+
+   // push_back / pop_back
+
+   void push_back(const value_type &value);
+   void push_back(value_type &&value)
+   {
+       emplace_back(MyStl::move(value));
+   }
+
+   void pop_back();
+
+   // insert
+
+   iterator insert(const_iterator pos, const value_type &value);
+   iterator insert(const_iterator pos, value_type &&value)
+   {
+       return emplate(pos, MyStl::move(value));
+   }
+
+   iterator insert(const_iterator pos, size_type n, const value_type &value)
+   {
+       MYSTL_DEBUG(pos >= begin() &&pos <= end());
+       return fill_insert(const_cast<iterator>(pos), n, value);
+   }
+
+   template <class Iter, typename std::enable_if<
+       MyStl::is_input_iterator<Iter>::value, int>::type = 0>
+    void insert(const_iterator pos, Iter first, Iter last)
+    {
+        MYSTL_DEBUG(pos >= begin() && pos <= end() && !(last < first));
+        copy_insert(const_cast<iterator>(pos), first, last);
+    }
+
+   // erase / clear
+   iterator erase(const_iterator pos);
+   iterator erase(const_iterator first, const_iterator last);
+   void clear() { erase(begin(), end());}
+
+   // resize / reverse
+   void resize(size_type new_size) { return resize(new_size, value_type()); }
+   void resize(size_type new_size, const value_type &value); 
+
+   void reverse() {MyStl::reverse(begin(), end()); } // algo.h 未定义
+
+   // swap
+   void swap(vector &rhs) noexcept;
+
+private:
+   // helper functions
+
+   // initialize / destory
+   void try_init() noexcept;
+
+   void init_space(size_type size, size_type cap);
+
+   void fill_init(size_type n, const value_type &value);
+   template <class Iter>
+    void range_init(Iter first, Iter last);
+
+   void destroy_and_recover(iterator first, iterator last, size_type n);
+
+   size_type get_new_cap(size_type add_size);
+
+   // assign
+
+   void fill_assign(size_type n, const value_type &value);
+
+   template <class InputIter>
+   void copy_assign(InputIter first, InputIter last, input_iterator_tag);
+
+   template <class ForwardIter>
+   void copy_assign(ForwardIter first, ForwardIter last, forward_iterator_tag);
+
+   // reallocate
+
+   template <class ...Args>
+   void reallocate_empalce(iterator pos, Args &&...args);
+   void reallocate_insert(iterator pos, const value_type &value);
+
+   // insert
+
+   iterator fill_insert(iterator pos, size_type n, const value_type &value);
+   template <class InputIter>
+   void copy_insert(iterator pos, InputIter first, InputIter last);
+
+   // shrink_to_fit
+
+   void reinsert(size_type size);
+
 
 
 
