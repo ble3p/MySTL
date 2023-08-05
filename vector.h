@@ -326,36 +326,145 @@ private:
    void copy_insert(iterator pos, InputIter first, InputIter last);
 
    // shrink_to_fit
-
    void reinsert(size_type size);
+};
 
 
+/***************************************函数定义**************************************/
 
 
+// 复制赋值操作符
+template <class T>
+vector<T>& vector<T>::operator=(const vector &rhs)
+{
+    if (this != rhs)
+    {
+        const auto len = rhs.size();
+        if (len > capacity())
+        {
+            vector tmp(rhs.begin, rhs.end());
+            swap(tmp);
+        }
+        else if( size() >= len)
+        {
+            auto i = MyStl::copy(rhs.begin(), rhs.end(), begin());
+            data_allocator::destory(i, end_);
+            end_ = begin_ + len;
+        }
+        else
+        {
+            MyStl::copy(rhs.begin(), rhs.begin() + size(), begin_);
+            MyStl::uninitialized_copy(rhs.begin() + size(), rhs.end(), end_);
+            cap_ = end_ = begin_ + len; // 重置capacity
+        }
+    }
+    return *this;
+}
+
+template <class T>
+vector<T>& vector<T>::operator=(vector &&rhs) noexcept
+{
+    destroy_and_recover(begin_, end_, cap_ - begin_); // 调用begin_ -- end_ 的析构， 然后释放 begin_ -- cap_的空间
+    begin_ = rhs.begin_;
+    end_ = rhs.end_;
+    cap_ = rhs.cap_;
+    rhs.begin_ = nullptr;
+    rhs.end_ = nullptr;
+    rhs.cap_ = nullptr;
+    return *this;
+}
+
+template <class T>
+void vector<T>::reserve(size_type n)
+{
+    if (capacity() < n)
+    {
+        THROW_LENGTH_ERROR_IF(n > max_size(), "n can not larget than max_size() in vector<T>::reserve(n)!");
+        const auto old_size = size();
+        auto tmp = data_allocator::allocate(n);
+        MyStl::uninitialized_move(begin_, end_, tmp); // 可以平凡move就调用移动赋值，否则用placenew
+        data_allocator::deallocate(begin_, cap_ - begin_);
+        begin_ = tmp;
+        end_ = tmp + old_size;
+        cap_ = begin_ + n;
+    }
+}
+
+template <class T>
+void vector<T>::shrink_to_fit()
+{
+    if (end_ < cap_)
+    {
+        reinsert(size());
+    }
+} // 缩小到size() 大小
 
 
+// 在 pos 位置就地构造元素， 避免额外的复制或移动开销
+template <class T>
+template <class ...Args>
+typename vector<T>::iterator
+vector<T>::emplace(const_iterator pos, Args &&...args) 
+{
+    MYSTL_DEBUG(pos >= begin() && pos <= end());
+    iterator xpos = const_cast<iterator>(pos);
+    const size_type n = xpos - begin_;
+    if (end_ != cap_ && xpos == end_)
+    {
+        data_allocator::construct(MyStl::address_of(*end_), MyStl::forward<Args>(args)...); // 通过placenew在end_处放置元素
+        ++end_;
+    }
+    else if (end_ != cap_)
+    {
+        auto new_end = end_;
+        data_allocator::construct(MyStl::address_of(*end_), *(end_ - 1));
+        ++new_end;
+        MyStl::copy_backward(xpos, end_ - 1, end_);
+        *xpos = value_type(MyStl::forward<Args>(args)...);
+    }
+    else
+    {
+        reallocate_empalce(xpos, MyStl::forward<Args>(args)...);
+    }
+    return begin() + n;
+}
 
+template <class T>
+template <class ...Args>
+void vector<T>::emplace_back(Args &&...args)
+{
+    if (end_ < cap_)
+    {
+        data_allocator::construct(MyStl::address_of(*end_), MyStl::forward<Args>(args)...);
+        ++end_;
+    }
+    else
+    {
+        reallocate_emplace(end_, MyStl::forward<Args>(args)...);
+    }
+}
 
+// 在尾部插入元素
+template <class T>
+void vector<T>::push_back(const value_type& value)
+{
+    if (end_ != cap_)
+    {
+        data_allocator::construct(MyStl::address_of(*end_), value);
+        ++end_;
+    }
+    else 
+    {
+        reallocate_insert(end_, value);
+    }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+template <class T>
+void vector<T>::pop_back()
+{
+    MYSTL_DEBUG(!empty());
+    data_allocator::destroy(end_ - 1);
+    --end_;
 }
 
 
@@ -457,6 +566,38 @@ private:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template <class T>
+bool operator==(const vector<T> &lhs, const vector<T> &rhs)
+{
+    return lhs.size() == rhs.size() && 
+        MyStl::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
 
 
 }

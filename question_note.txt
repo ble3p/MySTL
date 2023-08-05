@@ -2,3 +2,7 @@
 
 fill函数为什么从forward_iterator_tag开始,为什么返回void, 是因为规格书吗, 是因为没更新c++11标准？ fill_n在没更新c++11标准前也不不返回void的
 
+为什么vector 的 operator= 的左值引用方式会重置cap_到和rhs长度一致
+
+定义的对象指针是怎么被归为五类指针里的, 五类指针是在什么时候被定义的
+

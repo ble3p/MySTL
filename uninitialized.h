@@ -208,7 +208,8 @@ unchecked_uninit_move(InputIter first, InputIter last, ForwardIter result, std::
     {
         for (; first != last; ++first, ++cur)
         {
-            MyStl::construct(&*cur, MyStl::move(*first));
+            MyStl::construct(&*cur, MyStl::move(*first)); // 由forward抛出一个bad alloc异常, 前提是采取...右值参数construct 调用右值forward
+            
         }
 
     }
