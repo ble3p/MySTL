@@ -85,18 +85,59 @@ size_t count(InputIter first, InputIter last, const T& value)
 // count_if
 // 对[first, last)区间内的每个元素都进行一元 unary_pred 操作，返回结果为 true 的个数
 /*****************************************************************************************/
+template <class InputIter, class T, class UnaryPredicate>
+size_t count_if(InputIter first, InputIter last, const T &value, UnaryPredicate unary_pred)
+{
+    size_t n = 0;
+    for (; first != last; ++first)
+    {
+        if (unary_pred(*first, value))
+            ++n;
+    }
+    return n;
+
+}
 /*****************************************************************************************/
 // find
 // 在[first, last)区间内找到等于 value 的元素，返回指向该元素的迭代器
 /*****************************************************************************************/
+template <class InputIter, class T>
+InputIter find(InputIter first, InputIter last, const T &value)
+{
+    for (;first != last; ++first)
+    {
+        if (*first == value)
+            return first;
+    }
+}
 /*****************************************************************************************/
 // find_if
 // 在[first, last)区间内找到第一个令一元操作 unary_pred 为 true 的元素并返回指向该元素的迭代器
 /*****************************************************************************************/
+template <class InputIter, class T, class UnaryPredicate>
+InputIter find_if(InputIter first, InputIter last, const T &value, UnaryPredicate unary_pred)
+{
+    for (;first != last; ++first)
+    {
+        if (unary_pred(*first, value))
+            return first;
+    }
+    return last;
+}
 /*****************************************************************************************/
 // find_if_not
 // 在[first, last)区间内找到第一个令一元操作 unary_pred 为 false 的元素并返回指向该元素的迭代器
 /*****************************************************************************************/
+template <class InputIter, class T, class UnaryPredicate>
+InputIter find_if_not(InputIter first, InputIter last, const T &value, UnaryPredicate unary_pred)
+{
+    for (;first != last; ++first)
+    {
+        if (!unary_pred(*first, value))
+            return first;
+    }
+    return last;
+}
 
 
 /*****************************************************************************************/
