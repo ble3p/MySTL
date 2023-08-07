@@ -333,7 +333,7 @@ private:
 /***************************************函数定义**************************************/
 
 
-// 复制赋值操作符
+// 赋值操作符
 template <class T>
 vector<T>& vector<T>::operator=(const vector &rhs)
 {
@@ -421,6 +421,7 @@ vector<T>::emplace(const_iterator pos, Args &&...args)
         ++new_end;
         MyStl::copy_backward(xpos, end_ - 1, end_);
         *xpos = value_type(MyStl::forward<Args>(args)...);
+        end_ = new_end;
     }
     else
     {
