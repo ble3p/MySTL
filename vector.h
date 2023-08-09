@@ -824,27 +824,93 @@ fill_insert(iterator pos, size_type n, const value_type &value)
     return begin_ + xpos;
 }
 
+// copy_insert 函数
+template <class T>
+template <class InputIter>
+void vector<T>::
+copy_insert(iterator pos, InputIter first, InputIter last)
+{
+    if (first == last)
+        return;
+    const auto n = MyStl::distance(first, last);
+    if ((cap_ - end_) >= n)
+    {
+        const auto after_elems = end_ - pos;
+        auto old_end = end_;
+        if (after_elems > n)
+        {
+            end_ = MyStl::uninitialized_copy(end_ - n, end_, end_);
+            MyStl::move_backward(pos, old_end - n, old_end);;
+            MyStl::uninitialized_copy(first, last, pos);
+        }
+        else
+        {
+            auto mid = first;
+            MyStl::advance(mid, after_elems);
+            end_ = MyStl::uninitialized_copy(mid, last, end_);
+            end_ = MyStl::uninitialized_move(pos, old_end, end_); // 原本的pos后面的元素放在最后
+            MyStl::uninitialized_copy(first, mid, pos);
+        }
+    }
+    else
+    {
+        const auto new_size = get_new_cap(n);
+        auto new_begin = data_allocator::allocate(new_size);
+        auto new_end = new_begin;
+        try
+        {
+            new_end = MyStl::uninitialized_move(begin_, pos, new_begin);
+            new_end = MyStl::uninitialized_copy(first, last, new_end);
+            new_end = MyStl::uninitialized_move(pos, end_, new_end);
+        }
+        catch(...)
+        {
+            destroy_and_recover(new_begin, new_end, new_size);
+            throw;
+        }
+        data_allocator::deallocate(begin_, cap_ - begin_);
+        begin_ = new_begin;
+        end_ = new_end;
+        cap_ = begin_ + new_size;
 
+    }
+}
 
+// reinsert 函数
+template <class T>
+void vector<T>::reinsert(size_type size)
+{
+    auto new_begin = data_allocator::allocate(size);
+    try
+    {
+        MyStl::uninitialized_move(begin_, end_, new_begin);
+    }
+    catch(...)
+    {
+        data_allocator::deallocate(new_begin, size);
+        throw;
+    }
+    data_allocator::deallocate(begin_, cap_ - begin_);
+    begin_ = new_begin;
+    end_ = begin_ + size;
+    cap_ = begin_ + size;
 
+}
 
+/****************************************************************************************/
+// 重载比较操作符
 
+template <class T>
+bool operator ==(const vector<T> &lhs, const vector<T> &rhs)
+{
+    return lhs.size() == rhs.size() && MyStl::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+template <class T>
+bool operator<(const vector<T> &lhs, const vector<T> &rhs)
+{
+    return MyStl::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
 
 template <class T>
 bool operator!=(const vector<T>& lhs, const vector<T>& rhs)
@@ -852,109 +918,30 @@ bool operator!=(const vector<T>& lhs, const vector<T>& rhs)
   return !(lhs == rhs);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// template <class T>
-// bool operator==(const vector<T> &lhs, const vector<T> &rhs)
-// {
-//     return lhs.size() == rhs.size() && 
-//         MyStl::equal(lhs.begin(), lhs.end(), rhs.begin());
-// }
-// 
-// 
-// }
-
-
-
-
+template <class T>
+bool operator>(const vector<T> &lhs, const vector<T> &rhs)
+{
+    return rhs < lhs;
+}
+
+template <class T>
+bool operator<=(const vector<T> &lhs, const vector<T> &rhs)
+{
+    return !(rhs < lhs);
+}
+
+template <class T>
+bool operator>=(const vector<T> &lhs, const vector<T> &rhs)
+{
+    return !(lhs < rhs);
+}
+
+template <class T>
+void swap(vector<T> &lhs, vector<T> &rhs)
+{
+    lhs.swap(rhs);
+}
+
+} //namespace 
 
 #endif
