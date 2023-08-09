@@ -10,3 +10,6 @@ data_allocator::construct(MyStl::address_of(*end_), value); 这一段中，addre
 
 swap函数中 使用(this != &rhs) 还是 (*this != &rhs)
 
+为什么要给引用value在函数内部在定义一次引用来使用
+    const value_type &value_copy = value; 
+
