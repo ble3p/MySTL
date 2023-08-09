@@ -316,7 +316,7 @@ private:
    // reallocate
 
    template <class ...Args>
-   void reallocate_empalce(iterator pos, Args &&...args);
+   void reallocate_emplace(iterator pos, Args &&...args);
    void reallocate_insert(iterator pos, const value_type &value);
 
    // insert
@@ -719,10 +719,110 @@ copy_assign(ForwardIter first, ForwardIter last, forward_iterator_tag)
 }
 
 // 重新分配空间并在pos处插入元素
+template <class T>
+template <class ...Args>
+void vector<T>::
+reallocate_emplace(iterator pos, Args &&...args)
+{
+    const auto new_size = get_new_cap(1); // 最小添加16个, 并返回新大小
+    auto new_begin = data_allocator::allocate(new_size);
+    auto new_end = new_begin;
+    try
+    {
+        new_end = MyStl::uninitialized_move(begin_, pos, new_begin);
+        data_allocator::construct(MyStl::address_of(*new_end), MyStl::forward<Args>(args)...);
+        ++new_end;
+        new_end = MyStl::uninitialized_move(pos, end_, new_end);
+    }
+    catch(...)
+    {
+        data_allocator::deallocate(new_begin, new_size);
+        throw;
+    }
+    destroy_and_recover(begin_, end_, cap_ - begin_); // 先析构再释放空间
+    begin_ = new_begin;
+    end_ = new_end;
+    cap_ = new_begin + new_size;
+}
 
 
+// 重新分配空间并在pos处插入元素
+template <class T>
+void vector<T>::reallocate_insert(iterator pos, const value_type &value)
+{
+    const auto new_size = get_new_cap(1);
+    auto new_begin = data_allocator::allocate(new_size);
+    auto new_end = new_begin;
+    try
+    {
+        new_end = MyStl::uninitialized_move(begin_, end_, new_begin);
+        data_allocator::construct(MyStl::address_of(*new_end), value);
+        ++new_end;
+        new_end = MyStl::uninitialized_move(pos, end_, new_end);
 
+    }
+    catch(...)
+    {
+        data_allocator::deallocate(new_begin, new_size);
+        throw;
+    }
+    destroy_and_recover(begin_, end_, cap_ - begin_);
+    begin_ = new_begin;
+    end_ = new_end;
+    cap_ = new_begin + new_size;
+}
 
+// fill_insert 函数
+template <class T>
+typename vector<T>::iterator
+vector<T>::
+fill_insert(iterator pos, size_type n, const value_type &value)
+{
+    if (n == 0)
+        return pos;
+    const size_type xpos = pos - begin_;
+    const value_type value_copy = value;
+    if (static_cast<size_type>(cap_ - end_) >= n)
+    {
+        const size_type after_elems = end_ - pos;
+        auto old_end = end_;
+        if (after_elems > n)
+        {
+            MyStl::uninitialized_copy(end_ - n, end_ , end_);
+            end_ += n;
+            MyStl::move_backward(pos, old_end - n, old_end);
+            MyStl::uninitialized_fill_n(pos, n, value_copy);
+        }
+        else
+        {
+            end_ = MyStl::uninitialized_fill_n(end_, n - after_elems, value_copy);
+            end_ = MyStl::uninitialized_move(pos, old_end, end_);  // 移动在填充值之后
+            MyStl::uninitialized_fill_n(pos, after_elems, value_copy);
+        }
+    }
+    else
+    {
+        const auto new_size = get_new_cap(n);
+        auto new_begin = data_allocator::allocate(new_size);
+        auto new_end = new_begin;
+        try
+        {
+            new_end = MyStl::uninitialized_move(begin_, pos, new_begin);
+            new_end = MyStl::uninitialized_fill_n(new_end, n, value_copy);
+            new_end = MyStl::uninitialized_move(pos, end_, new_end);
+        }
+        catch(...)
+        {
+            destroy_and_recover(new_begin, new_end, new_size);
+            throw;
+        }
+        data_allocator::deallocate(begin_, cap_ - begin_ );
+        begin_ = new_begin;
+        end_ = new_end;
+        cap_ = begin_ + new_size;
+    }
+    return begin_ + xpos;
+}
 
 
 
