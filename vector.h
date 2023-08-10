@@ -72,7 +72,7 @@ public:
     { try_init(); }
 
     explicit vector(size_type n)
-    { fill_init(n, value_type()); } // 传一个类型对象
+    { fill_init(n, value_type()); } // 传一个类型对象,调用拷贝构造函数或移动拷贝构造函数
 
     vector(size_type n, const value_type &value)
     { fill_init(n, value);}
@@ -133,7 +133,8 @@ public:
 
    // 通过对象是否为const选择调用返回的指针是否是const
    reverse_iterator         rbegin()                    noexcept 
-   { return reverse_iterator(end()); } const_reverse_iterator   rbegin()            const   noexcept 
+   { return reverse_iterator(end()); } 
+   const_reverse_iterator   rbegin()            const   noexcept 
    { return const_reverse_iterator(end()); }
    reverse_iterator         rend()                      noexcept
    { return reverse_iterator(begin()); }
@@ -683,7 +684,7 @@ copy_assign(InputIter first, InputIter last, input_iterator_tag)
     }
     if (first == last)
     {
-        erease(cur, end_);
+        erase(cur, end_);
     }
     else
     {
@@ -901,7 +902,7 @@ void vector<T>::reinsert(size_type size)
 // 重载比较操作符
 
 template <class T>
-bool operator ==(const vector<T> &lhs, const vector<T> &rhs)
+bool operator==(const vector<T> &lhs, const vector<T> &rhs)
 {
     return lhs.size() == rhs.size() && MyStl::equal(lhs.begin(), lhs.end(), rhs.begin());
 }

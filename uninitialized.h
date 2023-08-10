@@ -1,5 +1,3 @@
-#ifndef MYSTL_UNINITIALIZED_H_
-#define MYSTL_UNINITIALIZED_H_
 
 // 这个头文件用于对未初始化空间构造元素
 
