@@ -426,7 +426,7 @@ vector<T>::emplace(const_iterator pos, Args &&...args)
     }
     else
     {
-        reallocate_empalce(xpos, MyStl::forward<Args>(args)...);
+        reallocate_emplace(xpos, MyStl::forward<Args>(args)...);
     }
     return begin() + n;
 }
