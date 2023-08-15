@@ -1,4 +1,5 @@
-
+#ifndef MYSTL_UNINITIALIZED_H_
+#define MYSTL_UNINITIALIZED_H_
 // 这个头文件用于对未初始化空间构造元素
 
 #include "algobase.h"
@@ -221,7 +222,7 @@ unchecked_uninit_move(InputIter first, InputIter last, ForwardIter result, std::
 template <class InputIter, class ForwardIter>
 ForwardIter uninitialized_move(InputIter first, InputIter last, ForwardIter result)
 {
-    return MyStl::unchecked_move(first, last, result,
+    return MyStl::unchecked_uninit_move(first, last, result,
                                  std::is_trivially_move_assignable<
                                  typename iterator_traits<InputIter>::
                                  value_type>{});

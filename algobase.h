@@ -3,6 +3,7 @@
 
 // 这个头文件包含了mystl的基本算法
 #include <cstring>
+#include <iostream>
 
 #include "iterator.h"
 #include "util.h"
@@ -112,7 +113,7 @@ typename std::enable_if< // SFINAE 技术
   std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
   std::is_trivially_copy_assignable<Up>::value,
   Up*>::type // 条件编译，只有满足条件才能使用这个函数
-unchecked_copy(Tp * first, Tp* last, Up* result)
+unchecked_copy(Tp *first, Tp *last, Up *result)
 {
   const auto n = static_cast<size_t>(last - first);
   if (n != 0)
@@ -125,7 +126,7 @@ template <class InputIter, class OutputIter>
 OutputIter
 copy(InputIter first, InputIter last, OutputIter result)
 {
-  return unchecked_copy(first, last, result);
+    return unchecked_copy(first, last, result);
 }
 
 /*****************************************************************************************/
@@ -246,7 +247,7 @@ copy_n(InputIter first, Size n, OutputIter result)
 
 template <class InputIter, class OutputIter>
 OutputIter
-unchecked_move_cat(InputIter first ,InputIter last, OutputIter result, input_iterator_tag)
+unchecked_move_cat(InputIter first ,InputIter last, OutputIter result, MyStl::input_iterator_tag)
 {
     for (; first != result; ++first, ++result)
     {
@@ -258,7 +259,7 @@ unchecked_move_cat(InputIter first ,InputIter last, OutputIter result, input_ite
 
 template <class RandomIter, class OutputIter>
 OutputIter
-unchecked_move_cat(RandomIter first ,RandomIter last, OutputIter result, random_access_iterator_tag)
+unchecked_move_cat(RandomIter first ,RandomIter last, OutputIter result, MyStl::random_access_iterator_tag)
 {
     for (auto n = last - first; n > 0; --n, ++first, ++ result)
     {

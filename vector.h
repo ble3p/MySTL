@@ -735,6 +735,7 @@ reallocate_emplace(iterator pos, Args &&...args)
         ++new_end;
         new_end = MyStl::uninitialized_move(pos, end_, new_end);
     }
+    
     catch(...)
     {
         data_allocator::deallocate(new_begin, new_size);
