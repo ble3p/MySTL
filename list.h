@@ -590,6 +590,122 @@ void list<T>::clear()
     }
 }
 
+template <class T>
+void list<T>::resize(size_type new_size, const value_type &value)
+{
+    auto i = begin();
+    size_type len = 0;
+    while (i != end() && len < new_size)
+    {
+        ++i;
+        ++len;
+    }
+    if (len == new_size)
+    {
+        erase(i, node_);
+    }
+    else
+    {
+        insert(node_, new_size - len ,value);
+    }
+}
+
+// 将list x接合与pos之前
+template <class T>
+void list<T>::splice(const_iterator pos, list &x)
+{
+    MYSTL_DEBUG(this != &x);
+    if (!x.empty())
+    {
+        THROW_LENGTH_ERROR_IF(size_ > max_size() - x.size_, "list<T>'s size too big");
+
+        auto f = x.node_ -> next;
+        auto l = x.node_ -> prev;
+
+        x.unlink_nodes(f, l);
+        link_nodes(pos.node_, f, l);
+
+        size_ += x.size_;
+        x.size_ = 0;
+    }
+}
+
+template <class T>
+void list<T>::splice(const_iterator pos, list &x, const_iterator it)
+{
+    if (pos.node_ != it.node_ && pos.node_ != it.node_ -> next)
+    {
+        THROW_LENGTH_ERROR_IF(size_ > max_size() - 1, "list<T>'s size too big");
+        
+        auto f = it.node_;
+
+        x.unlink_nodes(f, f);
+        link_nodes(pos.node_, f, f);
+
+        ++size_;
+        --x.size_;
+    }
+}
+
+template <class T>
+void list<T>::splice(const_iterator pos, list &x, const_iterator first, const_iterator last)
+{
+    if (first != last && this != &x)
+    {
+        size_type n = MyStl::distance(first, last);
+        THROW_LENGTH_ERROR_IF(size_ > max_size() - n, "list<T>'s size too big");
+        auto f = first.node_;
+        auto l = last.node_ -> prev;
+
+        x.unlink_nodes(f, l);
+        link_nodes(pos.node_, f, l);
+
+        size_ += n;
+        x.size_ -= n;
+    }
+
+}
+
+template <class T>
+template <class UnaryPredicate>
+void list<T>::remove_if(UnaryPredicate pred)
+{
+    auto f = begin();
+    auto l = end();
+    for (auto next = f; f != l; f = next)
+    {
+        ++next;
+        if (pred(*f))
+        {
+            erase(f);
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
 
 
 
