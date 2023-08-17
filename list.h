@@ -683,7 +683,52 @@ void list<T>::remove_if(UnaryPredicate pred)
 
 }
 
+template <class T>
+template <class BinaryPredicate>
+void list<T>::unique(BinaryPredicate pred)
+{
+    auto i = begin();
+    auto e = end();
+    auto j = i;
+    ++j;
+    while (j != e)
+    {
+        if (pred (*i, *j))
+        {
+            erase(j);
+        }
+        else
+        {
+            i = j;
+        }
+        j = i;
+        ++j;
+    }
+}
 
+template <class T>
+template <class Compare>
+void list<T>::merge(list &x, Compare comp)
+{
+    if (this != &x)
+    {
+        THROW_LENGTH_ERROR_IF(size_ > max_size() - x.size_, "list<T>'s size too big");
+
+        auto f1 = begin();
+        auto l1 = end();
+        auto f2 = x.begin();
+        auto l2 = x.end();
+
+        while (f1 != l1 && f2 != l2)
+        {
+            if (comp(*f2, *f1))
+            {
+
+            }
+        }
+    }
+
+}
 
 
 
@@ -715,6 +760,6 @@ void list<T>::remove_if(UnaryPredicate pred)
 
 
 
-} //namespace
+ //namespace
 #endif
 
