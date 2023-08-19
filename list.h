@@ -38,7 +38,7 @@ struct node_traits
 template <class T>
 struct list_node_base
 {
-    typedef typename node_traits<T>::base_prt base_ptr;
+    typedef typename node_traits<T>::base_ptr base_ptr;
     typedef typename node_traits<T>::node_ptr node_ptr;
 
     base_ptr prev;
@@ -535,7 +535,7 @@ public:
     // insert
     iterator fill_insert(const_iterator pos, size_type n, const value_type &value);
     template <class Iter>
-    void copy_insert(const_iterator pos, size_type n, Iter first);
+    iterator copy_insert(const_iterator pos, size_type n, Iter first);
 
     // sort
     template <class Compared>
@@ -985,7 +985,7 @@ list<T>::fill_insert(const_iterator pos, size_type n, const value_type &value)
 template <class T>
 template <class Iter>
 typename list<T>::iterator
-list<T>::copy_insert(cosnt_iterator pos, size_type n, Iter first)
+list<T>::copy_insert(const_iterator pos, size_type n, Iter first)
 {
     iterator r(pos.node_);
     if (n != 0)
@@ -1049,7 +1049,7 @@ list<T>::list_sort(iterator f1, iterator l2, size_type n, Compare comp)
     auto result = f1 = list_sort(f1, l1, n2, comp);
     auto f2 = l1 = list_sort(l1, l2, n - n2, comp);
 
-    if (comp(*f2, *f1))
+    if (comp(*f2, *f1)) // 首次移动会定下result
     {
         auto m = f2;
         ++m;
@@ -1086,7 +1086,7 @@ list<T>::list_sort(iterator f1, iterator l2, size_type n, Compare comp)
             unlink_nodes(f, l);
             m = f1;
             ++m;
-            link_noes(f1.node_, f, l);
+            link_nodes(f1.node_, f, l);
             f1 = m;
         }
         else
