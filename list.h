@@ -284,7 +284,7 @@ public:
     }
 public:
     // 迭代器相关操作
-    iterator                begin()          noexcept
+    iterator                begin()          noexcept // 拷贝构造函数
     { return node_ -> next;}
     const_iterator          begin()    const noexcept
     { return node_ -> next;}
@@ -706,6 +706,7 @@ void list<T>::unique(BinaryPredicate pred)
     }
 }
 
+// comp strict weaking order
 template <class T>
 template <class Compare>
 void list<T>::merge(list &x, Compare comp)
@@ -723,43 +724,426 @@ void list<T>::merge(list &x, Compare comp)
         {
             if (comp(*f2, *f1))
             {
+                auto next = f2;
+                ++next;
+                for (; next != l2 && comp(*next, *f1); ++next)
+                    ;
+                auto f = f2.node_;
+                auto l = next.node_ -> prev;
+                f2 = next;
 
+                // link node
+                x.unlinke_nodes(f, l);
+                link_nodes(f1.node_, f, l);
+                ++f1;
+            }
+            else
+            {
+                ++f1;
             }
         }
+        if (f2 != l2)
+        {
+            auto f = f2.node_;
+            auto l = l2.node_ -> pref;
+            x.unlink_nodes(f, l);
+            link_nodes(l1.node_, f, l);
+        }
+
+        size_ += x.size_;
+        x.size_ = 0;
+    }
+}
+
+template <class T>
+void list<T>::reverse()
+{
+    if (size_ <= 1)
+    {
+        return;
+    }
+    auto i = begin();
+    auto e = end();
+    while(i.node_ != e.node_)
+    {
+        MyStl::swap(i.node_ -> prev, i.node_ -> next);
+        i.node_ = i.node -> prev;
+    }
+    MyStl::swap(e.node_ -> prev, e.node_ -> next);
+}
+
+
+/*****************************************************************************************/
+// helper function
+template <class T>
+template <class ...Args>
+typename list<T>::node_ptr
+list<T>::create_node(Args&& ...args)
+{
+    node_ptr p = node_allocator::allocate(1);
+    try
+    {
+        data_allocator::construct(MyStl::address_of(p -> value), MyStl::forward<Args>(args)...);
+        p -> prev = nullptr;
+        p -> next = nullptr;
+    }
+    catch(...)
+    {
+        node_allocator::deallocate(p);
+        throw;
+    }
+    return p;
+}
+
+template <class T>
+void list<T>::destroy_node(node_ptr p)
+{
+    data_allocator::destroy(MyStl::address_of(p -> value));
+    node_allocator::deallocate(p);
+}
+
+template <class T>
+void list<T>::fill_init(size_type n, const value_type &value)
+{
+    node_ = base_allocator::allocate(1);
+    node_ -> unlink();  
+    size_ = n;
+    try
+    {
+        for (; n > 0; --n)
+        {
+            auto node = create_node(value);
+            link_nodes_at_back(node -> as_base(), node -> as_base());
+        }
+    }
+    catch(...)
+    {
+        clear();
+        base_allocator::deallocate(node_);
+        node_ = nullptr;
+        throw;
+    }
+}
+
+template <class T>
+template <class Iter>
+void list<T>::copy_init(Iter first, Iter last)
+{
+    node_ = base_allocator::allocate(1);
+    node_ -> unlink();
+    size_type n = MyStl::distance(first, last);
+    size_ = n;
+    try
+    {
+        for (; n > 0; --n, ++first)
+        {
+            auto node = create_node(*first);
+            link_nodes_at_back(node -> as_base(), node -> as_base());
+        }
+    }
+    catch(...)
+    {
+        clear();
+        base_allocator::deallocate(node_);
+        node_ = nullptr;
+        throw;
+    }
+}
+
+template <class T>
+typename list<T>::iterator
+list<T>::link_iter_node(const_iterator pos, base_ptr link_node)
+{
+    if (pos == node_ -> next)
+    {
+        link_nodes_at_front(link_node, link_node);
+    }
+    else if (pos == node_)
+    {
+        link_nodes_at_back(link_node, link_node);
+    }
+    else
+    {
+        link_nodes(pos.node_, link_node, link_node);
+    }
+    return iterator(link_node);
+}
+
+template <class T>
+void list<T>::link_nodes(base_ptr pos, base_ptr first, base_ptr last)
+{
+    pos -> prev -> next = first;
+    first -> prev = pos -> prev;
+    pos -> prev = last;
+    last -> next = pos;
+}
+
+template <class T>
+void list<T>::link_nodes_at_front(base_ptr first, base_ptr last)
+{
+    first -> prev = node_;
+    last -> next = node_ -> next;
+    last -> next -> prev = last;
+    node_ -> next = first;
+}
+
+template <class T>
+void list<T>::link_nodes_at_back(base_ptr first, base_ptr last)
+{
+    last -> next = node_;
+    first -> prev = node_ -> prev;
+    first -> prev -> next = first;
+    node_ -> prev = last;
+}
+
+template <class T>
+void list<T>::unlink_nodes(base_ptr first, base_ptr last)
+{
+    first -> prev -> next = last -> next;
+    last -> next -> prev = first -> prev;
+}
+
+template <class T>
+void list<T>::fill_assign(size_type n, const value_type &value)
+{
+    auto i = begin();
+    auto e = end();
+    for (; n > 0 && i != e; --n, ++i)
+    {
+        *i = value;
+    }
+    if (n > 0)
+    {
+        insert(e, n, value);
+    }
+    else
+    {
+        erase(i ,e);
+    }
+}
+
+template <class T>
+template <class Iter>
+void list<T>::copy_assign(Iter f2, Iter l2)
+{
+    auto f1 = begin();
+    auto l1 = end();
+    for (; f1 != l1 && f2 != l2; ++f1, ++f2)
+    {
+        *f1 = *f2;
+    }
+    if (f2 == l2)
+    {
+        erase(f1, l1);
+    }
+    else
+    {
+        insert(l1, f2, l2);
+    }
+}
+
+template <class T>
+typename list<T>::iterator
+list<T>::fill_insert(const_iterator pos, size_type n, const value_type &value)
+{
+    iterator r(pos.node_);
+    if (n != 0)
+    {
+        const auto add_size = n;
+        auto node = create_node(value);
+        node -> prev = nullptr;
+        iterator r = node;
+        iterator end = r;
+        try
+        {
+            for (--n; n > 0; --n, ++end)
+            {
+                auto next = create_node(value);
+                end.node_ -> next = next -> as_base();
+                next -> prev = end.node_;
+            }
+            size_ += add_size;
+        }
+        catch(...)
+        {
+            auto enode = end.node_;
+            while (true)
+            {
+                auto prev = enode -> prev;
+                destroy_node(enode -> as_node());
+                if (prev == nullptr)
+                    break;
+                enode = prev;
+            }
+            throw;
+        }
+        link_nodes(pos.node_, r.node_, end.node_);
+    }
+    return r;
+}
+
+template <class T>
+template <class Iter>
+typename list<T>::iterator
+list<T>::copy_insert(cosnt_iterator pos, size_type n, Iter first)
+{
+    iterator r(pos.node_);
+    if (n != 0)
+    {
+        const auto add_size = n;
+        auto node = create_node(*first);
+        node -> prev = nullptr;
+        r = iterator(node);
+        iterator end = r;
+        try
+        {
+            for (--n, ++first; n > 0; --n, ++first, ++end)
+            {
+                auto next = create_node(*first);
+                end.node_ -> next = next -> as_base();
+                next -> prev = end.node_;
+            }
+            size_ += add_size;
+        }
+        catch(...)
+        {
+            auto enode = end.node_;
+            while (true)
+            {
+                auto prev = enode -> prev;
+                destroy_node(enode -> as_node());
+                if (prev == nullptr)
+                    break;
+                enode = prev;
+            }
+            throw;
+        }
+        link_nodes(pos.node_, r.node_, end.node_);
+    }
+    return r;
+}
+
+template <class T>
+template <class Compare>
+typename list<T>::iterator
+list<T>::list_sort(iterator f1, iterator l2, size_type n, Compare comp)
+{
+    if (n < 2)
+        return f1;
+    if (n == 2)
+    {
+        if (comp(*--l2, *f1))
+        {
+            auto ln = l2.node_;
+            unlink_nodes(ln, ln);
+            link_nodes(f1.node_, ln, ln);
+            return l2;
+        }
+        return f1;
     }
 
+    // 循环前执行一次
+    auto n2 = n / 2;
+    auto l1 = f1;
+    MyStl::advance(l1, n2);
+    auto result = f1 = list_sort(f1, l1, n2, comp);
+    auto f2 = l1 = list_sort(l1, l2, n - n2, comp);
+
+    if (comp(*f2, *f1))
+    {
+        auto m = f2;
+        ++m;
+        for (; m != l2 && comp(*m, *f1); ++n)
+            ;
+        auto f = f2.node_;
+        auto l = m.node_ -> prev;
+        result = f2;
+        l1 = f2 = m;
+        unlink_nodes(f, l);
+        m = f1;
+        ++m;
+        link_nodes(f1.node_, f, l);
+        f1 = m; //
+    }
+    else
+    {
+        ++f1;
+    }
+
+    while (f1 != l1 && f2 != l2)
+    {
+        if (comp(*f2, *f1))
+        {
+            auto m = f2;
+            ++m;
+            for (; m != l2 && comp(*m, *f1); ++m)
+                ;
+            auto f = f2.node_;
+            auto l = m.node_ -> prev;
+            if (l1 == f2)
+                l1 = m;
+            f2 = m;
+            unlink_nodes(f, l);
+            m = f1;
+            ++m;
+            link_noes(f1.node_, f, l);
+            f1 = m;
+        }
+        else
+        {
+            ++f1;
+        }
+    }
+    return result;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+template <class T>
+bool operator==(const list<T> &lhs, const list<T> &rhs)
+{
+    auto f1 = lhs.cbegin();
+    auto f2 = rhs.cbegin();
+    auto l1 = lhs.cend();
+    auto l2 = rhs.cend();
+    for (; f1 != l1 && f2 != l2 && *f1 == *f2; ++f1, ++f2)
+        ;
+    return f1 == l1 && f2 == l2;
 }
 
+template <class T>
+bool operator<(const list<T> &lhs, const list<T> &rhs)
+{
+    return MyStl::lexicographical_compare(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend());
+}
 
+template <class T>
+bool operator!=(const list<T> &lhs, const list<T> &rhs)
+{
+    return !(lhs == rhs);
+}
 
+template <class T>
+bool operator>(const list<T> &lhs, const list<T> &rhs)
+{
+    return rhs < rhs;
+}
 
+template <class T>
+bool operator<=(const list<T> &lhs, const list<T> &rhs)
+{
+    return !(rhs < lhs);
+}
 
+template <class T>
+bool operator>=(const list<T> &lhs, const list<T> &rhs)
+{
+    return !(lhs < rhs);
+}
 
-
-
-
-
- //namespace
+template <class T>
+void swap(list<T> &lhs, list<T> &rhs) noexcept
+{
+    lhs.swap(rhs);
+}
+} //namespace
 #endif
 
