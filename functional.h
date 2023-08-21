@@ -94,6 +94,20 @@ struct greater :public binary_function<T, T, bool>
   bool operator()(const T& x, const T& y) const { return x > y; }
 };
 
+class Person
+{
+    public: Person() = default;
+    bool operator()() { return 1; }
+
+};
+void show(Person p)
+{
+    p();
+}
+
+
+
+
 // 函数对象：小于
 template <class T>
 struct less :public binary_function<T, T, bool>
