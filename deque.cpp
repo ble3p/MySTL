@@ -1,6 +1,7 @@
 #ifndef _MYSTL_DEQUE_H_
 #define _MYSTL_DEQUE_H_
 #include "allocator.h" 
+#include "algobase.h"
 
 
 
@@ -8,15 +9,100 @@ namespace MyStl
 {
     
 
-template <class T>
+template <class T, size_t Bufsize>
 class _deque_iterator
 {
 public:
+
+    typedef random_access_iterator_tag  iterator_category;
     typedef T                           value_type;
     typedef T*                          pointer;
     typedef T&                          reference;
+    typedef size_t                      size_type;
+    typedef ptrdiff_t                   difference_type;
 
+    typedef T**                         map_pointer;
     typedef _deque_iterator             self;
+
+    pointer cur;
+    pointer first;
+    pointer last;
+    map_pointer node;
+
+    static size_t buffer_size() { return _deque_buf_size(Bufsize, sizeof(T)); }
+
+
+public:
+    // 构造函数
+    _deque_iterator() = default;
+    _deque_iterator(pointer cur_, pointer first_, pointer last_, map_pointer node_) : 
+        cur(cur_), first(first_), last(last_), node(node_) {} 
+
+    // 重载运算符
+    T operator*() { return *cur; }
+    T* operator->() { return &(operator*());}
+
+    difference_type operator-(const self &rhs)
+    {
+        return difference_type(buffer_size()) * (node - rhs.node - 1) + 
+                                                (cur - first) + (rhs.last - rhs.cur);
+
+    }
+
+    self& operator++() 
+    {
+        ++cur;
+        if (cur == last)
+        {
+            set_node(node + 1);
+            cur = first;
+        }
+        return *this;
+    }
+
+    self operator++(int)
+    {
+        self tmp = *this;
+        ++*this;
+        return *this;
+    }
+
+    self& operator--()
+    {
+        if (cur == first)
+        {
+            set_node(node - 1);
+            cur = last;
+        }
+        --cur;
+        return *this;
+    }
+
+    self operator--(int)
+    {
+        self tmp = *this;
+        --*this;
+        return tmp;
+    }
+
+private:
+    static size_t _deque_buf_size(size_t bufsize, size_t sz)
+    {
+        // bufsize = 0， 则分配512个字节给T类型使用，不够按一计算，否则按bufsize计算
+        return bufsize != 0 ? bufsize : (sz < 512 ? size_t(512 / sz) : size_t(1));
+    }
+
+    void set_node(map_pointer new_node)
+    {
+        first = *new_node;
+        last = *new_node + difference_type(buffer_size());
+        node = new_node;
+    }
+    
+
+
+    
+    
 
 };
 
@@ -33,8 +119,8 @@ public:
     typedef ptrdiff_t                           difference_type;
     
 
-    typedef _deque_iterator<T>                  iterator;
-    typedef const _deque_iterator<T>            const_iterator;
+    typedef _deque_iterator<T, Bufsize>                  iterator;
+    typedef const _deque_iterator<T, Bufsize>            const_iterator;
     typedef MyStl::reverse_iterator<T>          reverse_terator;
     typedef const MyStl::reverse_iterator<T>    const_reverse_terator;
 
