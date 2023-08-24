@@ -39,14 +39,13 @@ public:
         cur(cur_), first(first_), last(last_), node(node_) {} 
 
     // 重载运算符
-    T operator*() { return *cur; }
-    T* operator->() { return &(operator*());}
+    T operator*() const { return *cur; }
+    T* operator->() const { return &(operator*());}
 
-    difference_type operator-(const self &rhs)
+    difference_type operator-(const self &rhs) const
     {
         return difference_type(buffer_size()) * (node - rhs.node - 1) + 
                                                 (cur - first) + (rhs.last - rhs.cur);
-
     }
 
     self& operator++() 
@@ -83,6 +82,62 @@ public:
         self tmp = *this;
         --*this;
         return tmp;
+    }
+
+    // random_access
+    self& operator+=(difference_type n) 
+    {
+        size_t len = buffer_size();
+        // 计算偏移值
+        difference_type offset = cur - first + n;
+        if (offset > len)
+        {
+            set_node(node + offset / difference_type(len));
+            cur = first + difference_type(offset - len * (offset / len));
+        }
+        else if (offset < 0)
+        {
+            set_node(node + -difference_type(-offset / len + 1));
+        }
+        else
+        {
+            cur = first + offset;
+        }
+        return *this;
+
+    }
+
+    self operator+(difference_type n) const
+    {
+        self tmp = *this;
+        return tmp += n;
+    }
+
+    self& operator-=(difference_type n) const
+    {
+        return *this += -n; 
+    }
+
+    self operator-(difference_type n) const
+    {
+        self tmp = *this;
+        return *this -= n;
+    }
+
+    self operator[](size_t n) const
+    {
+        return *(*this + n);
+    }
+
+    bool operator==(const self &rhs) const
+    {
+        return (cur == rhs.cur) && (first == rhs.first) && (last = rhs.last) && (node = rhs.node);
+
+    }
+
+    bool operator!=(const self &rhs) const
+    {
+        return !(*this == rhs);
     }
 
 private:
