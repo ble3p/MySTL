@@ -98,6 +98,7 @@ public:
         else if (offset < 0)
         {
             set_node(node + -difference_type(-offset / len + 1));
+            cur = last + offset + len * (-offset / len + 1);
         }
         else
         {
@@ -131,13 +132,18 @@ public:
 
     bool operator==(const self &rhs) const
     {
-        return (cur == rhs.cur) && (first == rhs.first) && (last = rhs.last) && (node = rhs.node);
+        return (cur == rhs.cur) && (first == rhs.first) && (last == rhs.last) && (node == rhs.node);
 
     }
 
     bool operator!=(const self &rhs) const
     {
         return !(*this == rhs);
+    }
+
+    bool operator<(const self &rhs) const
+    {
+        return  node < rhs.node || ((node == rhs.node) && cur < rhs.cur);
     }
 
 private:
@@ -181,9 +187,13 @@ public:
 
 protected:
     typedef T*          map;
-    typedef T*          map_pointer;
+    typedef map*          map_pointer;
     typedef size_t      map_size;
+
+private:
+    map_pointer mp;
     
+public:
 
 
 };
