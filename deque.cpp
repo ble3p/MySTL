@@ -159,11 +159,6 @@ private:
         last = *new_node + difference_type(buffer_size());
         node = new_node;
     }
-    
-
-
-    
-    
 
 };
 
@@ -172,34 +167,87 @@ class deque
 {
 public:
 
-    typedef T                                   value_type;
-    typedef T*                                  pointer;
-    typedef T&                                  reference;
-    typedef const T*                            const_pointer;
-    typedef size_t                              size_type;
-    typedef ptrdiff_t                           difference_type;
+    typedef T                                           value_type;
+    typedef T*                                          pointer;
+    typedef T&                                          reference;
+    typedef const T*                                    const_pointer;
+    typedef size_t                                      size_type;
+    typedef ptrdiff_t                                   difference_type;
     
 
-    typedef _deque_iterator<T, Bufsize>                  iterator;
-    typedef const _deque_iterator<T, Bufsize>            const_iterator;
-    typedef MyStl::reverse_iterator<T>          reverse_terator;
-    typedef const MyStl::reverse_iterator<T>    const_reverse_terator;
+    typedef _deque_iterator<T, Bufsize>                 iterator;
+    typedef const _deque_iterator<T, Bufsize>           const_iterator;
+    typedef MyStl::reverse_iterator<T>                  reverse_iterator;
+    typedef const MyStl::reverse_iterator<T>            const_reverse_iterator;
+
+    typedef MyStl::allocator<T>                         data_allocator;
+    typedef MyStl::allocator<pointer>                   map_allocator;
 
 protected:
-    typedef T*          map;
-    typedef map*          map_pointer;
-    typedef size_t      map_size;
+    typedef pointer*                                    map_pointer;
+    iterator start;
+    iterator finish;
+    map_pointer map;
+    size_type map_size;
 
-private:
-    map_pointer mp;
     
 public:
+
+    // 构造函数
+    deque(size_t n, const T &value) : start(), finish(), map(), map_size(0)
+    {
+        fill_initialize(n, value);
+    }
+
+    // 数据结构
+    // 迭代器相关
+    iterator begin() { return start; }
+    const_iterator begin() const { return start; }
+    iterator end() { return finish; }
+    const_iterator end() const { return finish; }
+
+    const_iterator cbegin() const { return start; }
+    const_iterator cend() const { return finish; }
+
+    reverse_iterator rbegin() { return finish; }
+    const_reverse_iterator rbegin() const { return finish; }
+    reverse_iterator rend() {return start; }
+    const_reverse_iterator rend() const { return start; }
+
+    const_reverse_iterator crbegin() const { return finish; }
+    const_reverse_iterator crend() const { return start; }
+
+    // 访问
+    reference operator[](size_t n) { return start[difference_type(n)];}
+    reference front() { return *start; }
+    reference back() 
+    {
+        iterator tmp = finish;
+        return *--tmp;
+    }
+
+    // 容量
+    size_type size() const { return size_type(finish - start); }
+    bool empty() const { return start == finish; }
+    size_type max_size() const { return size_type(-1); }
+
+    // helper function
+    void fill_initialize(size_t n, const T &value) {}
+
+
 
 
 };
 
 
 
+
+// helper function
+template <class T>
+void fill_initialize(size_t n, const T &value)
+{
+
+}
 
 
 
