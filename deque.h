@@ -2,6 +2,7 @@
 #define _MYSTL_DEQUE_H_
 #include "allocator.h" 
 #include "algobase.h"
+#include "algobase.h"
 
 
 
@@ -146,6 +147,13 @@ public:
         return  node < rhs.node || ((node == rhs.node) && cur < rhs.cur);
     }
 
+    void set_node(map_pointer new_node)
+    {
+        first = *new_node;
+        last = *new_node + difference_type(buffer_size());
+        node = new_node;
+    }
+
 private:
     static size_t _deque_buf_size(size_t bufsize, size_t sz)
     {
@@ -153,12 +161,6 @@ private:
         return bufsize != 0 ? bufsize : (sz < 512 ? size_t(512 / sz) : size_t(1));
     }
 
-    void set_node(map_pointer new_node)
-    {
-        first = *new_node;
-        last = *new_node + difference_type(buffer_size());
-        node = new_node;
-    }
 
 };
 
@@ -231,23 +233,80 @@ public:
     bool empty() const { return start == finish; }
     size_type max_size() const { return size_type(-1); }
 
+    // 插入
+    void push_back(const T &value);
+    void push_front(const T &value);
+private:
+
+    // 大小
+    size_type initial_map_size(size_t n) { return MyStl::max(n + 2, size_t(8));}
+    size_type buffer_size() { return _deque_buf_size(Bufsize, sizeof(T)); }
+    size_type _deque_buf_size(size_t bufsize, size_t sz) { return bufsize != 0 ? bufsize : (sz < 512 ? size_type(512 / sz) : size_type(1)); }
+
+
     // helper function
-    void fill_initialize(size_t n, const T &value) {}
-
-
-
-
+    void fill_initialize(size_t n, const T &value);
+    void create_map_and_nodes(size_t n);
 };
 
 
 
 
 // helper function
-template <class T>
-void fill_initialize(size_t n, const T &value)
+template <class T, class Alloc, size_t Bufsize>
+void deque<T, Alloc, Bufsize>::fill_initialize(size_t n, const T &value)
 {
+    // 计算节点大小
+    create_map_and_nodes(n);
+    try
+    {
+        for (auto cur = start; cur.node < finish.node; ++cur.node)
+        {
+            uninitialized_fill(cur.first, cur.last, value);
 
+        }
+        uninitialized_fill(finish.first, finish.last, value);
+
+    }
+    catch(...)
+    {
+        throw;
+    }
 }
+
+template <class T, class Alloc, size_t Bufsize>
+void deque<T,Alloc, Bufsize>::create_map_and_nodes(size_t n)
+{
+    size_t nodes = size_type(n / buffer_size() + 1);
+    size_t map_size_ = initial_map_size(nodes);
+    map_size = map_size_;
+    map = map_allocator(map_size_);
+
+    // 保持两端扩张能量一致
+    map_pointer nfirst = map + difference_type((map_size - nodes) / 2);
+    map_pointer nlast = nfirst + difference_type(nodes);
+
+    try
+    {
+        for (auto cur = nfirst; cur != nlast; ++cur)
+        {
+            *cur = data_allocator(buffer_size());
+        }
+        start.set_node(nfirst);
+        start.cur = start.first;
+        finish.set_node(nlast - 1);
+        finish.cur = finish.start + n % buffer_size();
+    }
+    catch(...)
+    {
+        for (auto cur = nfirst; cur != nlast; ++cur)
+        {
+            data_allocator::deallocate(*cur);
+        }
+        throw;
+    }
+}
+
 
 
 
