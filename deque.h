@@ -2,7 +2,7 @@
 #define _MYSTL_DEQUE_H_
 #include "allocator.h" 
 #include "algobase.h"
-#include "algobase.h"
+#include "uninitialized.h"
 
 
 
@@ -40,7 +40,7 @@ public:
         cur(cur_), first(first_), last(last_), node(node_) {} 
 
     // 重载运算符
-    T operator*() const { return *cur; }
+    T& operator*() const { return *cur; }
     T* operator->() const { return &(operator*());}
 
     difference_type operator-(const self &rhs) const
@@ -126,7 +126,7 @@ public:
         return *this -= n;
     }
 
-    self operator[](size_t n) const
+    T& operator[](size_t n) const
     {
         return *(*this + n);
     }
@@ -221,8 +221,8 @@ public:
 
     // 访问
     reference operator[](size_t n) { return start[difference_type(n)];}
-    reference front() { return *start; }
-    reference back() 
+    reference front() const { return *start; }
+    reference back() const
     {
         iterator tmp = finish;
         return *--tmp;
@@ -262,10 +262,10 @@ void deque<T, Alloc, Bufsize>::fill_initialize(size_t n, const T &value)
     {
         for (auto cur = start; cur.node < finish.node; ++cur.node)
         {
-            uninitialized_fill(cur.first, cur.last, value);
+            MyStl::uninitialized_fill(cur.first, cur.last, value);
 
         }
-        uninitialized_fill(finish.first, finish.last, value);
+        MyStl::uninitialized_fill(finish.first, finish.last, value);
 
     }
     catch(...)
@@ -280,7 +280,7 @@ void deque<T,Alloc, Bufsize>::create_map_and_nodes(size_t n)
     size_t nodes = size_type(n / buffer_size() + 1);
     size_t map_size_ = initial_map_size(nodes);
     map_size = map_size_;
-    map = map_allocator(map_size_);
+    map = map_allocator::allocate(map_size_);
 
     // 保持两端扩张能量一致
     map_pointer nfirst = map + difference_type((map_size - nodes) / 2);
@@ -290,12 +290,12 @@ void deque<T,Alloc, Bufsize>::create_map_and_nodes(size_t n)
     {
         for (auto cur = nfirst; cur != nlast; ++cur)
         {
-            *cur = data_allocator(buffer_size());
+            *cur = data_allocator::allocate(buffer_size());
         }
         start.set_node(nfirst);
         start.cur = start.first;
         finish.set_node(nlast - 1);
-        finish.cur = finish.start + n % buffer_size();
+        finish.cur = finish.first + n % buffer_size();
     }
     catch(...)
     {
