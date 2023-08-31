@@ -187,10 +187,11 @@ public:
 
 protected:
     typedef pointer*                                    map_pointer;
-    iterator start;
-    iterator finish;
-    map_pointer map;
-    size_type map_size;
+    iterator                                            start;
+    iterator                                            finish;
+    map_pointer                                         map;
+    size_type                                           map_size;
+
 
     
 public:
