@@ -143,11 +143,20 @@ public:
         return get_height_impl(root);
     }
     
-private:
-    virtual void freeBinaryTree(BNode *node) = 0;
+protected:
+    void freeBinaryTree(BNode *node)
+    {
+        if (node == nullptr)
+            return;
+        BNode* left_node = node -> left;
+        BNode* right_node = node -> right;
+
+        delete node;
+        freeBinaryTree(left_node);
+        freeBinaryTree(right_node);
+        
+    }
     
-    
-private:
     void pre_order_impl(BNode *node)
     {
         if (node == nullptr) return;
@@ -215,10 +224,11 @@ template <class T>
 class BinaryTree : public BaseTree<T>
 {
 public:
-    typedef BinaryNode<T>   BNode;
     typedef T               value_type;
 private:
+    typedef BinaryNode<T>   BNode;
     using BaseTree<T>::root;
+    using BaseTree<T>::freeBinaryTree;
     value_type mark;
 
 public:
@@ -236,7 +246,6 @@ public:
     
 private:
     BNode* create_node(const vector<T> &vec, int &index);
-    void freeBinaryTree(BNode *node) override;
 };
 
 template <class T>
@@ -254,28 +263,14 @@ BinaryTree<T>::create_node(const vector<T> &vec, int &index)
     return node;
 }
 
-template <class T>
-void
-BinaryTree<T>::freeBinaryTree(typename BinaryTree<T>::BNode *node)
-{
-    if (node == nullptr)
-        return;
-    BNode* left_node = node -> left;
-    BNode* right_node = node -> right;
-
-    delete node;
-    freeBinaryTree(left_node);
-    freeBinaryTree(right_node);
-    
-}
 
 template <class T>
 class BinarySearchTree : public BaseTree<T>
 {
-public:
-    using BaseTree<T>::root;
-    typedef BinaryNode<T>   BNode;
 private:
+    using BaseTree<T>::root;
+    using BaseTree<T>::freeBinaryTree;
+    typedef BinaryNode<T>   BNode;
 public:
     BinarySearchTree(const initializer_list<T> &li)
     {
@@ -302,20 +297,37 @@ public:
         auto res = find_parent_impl(value, root, root);
         return {res.first -> value, res.second};
     }
+    bool is_balance() { return is_balance_impl(root); }
 
 private:
+    // 构造函数
     void create_node(const T &value, BNode *node);
-    void freeBinaryTree(BNode *node) override;
+    
+    // 操作
     pair<BNode*, bool> find_value_impl(const T &value, BNode *node);
     pair<BNode*, bool> find_parent_impl(const T &value, BNode *node, BNode *pNode);
     bool delete_value_impl(const T &value, BNode *node);
+    // 其他
+    
+    bool is_balance_impl(BNode *node);
     void insert_node(BNode *node, BNode *start);
     bool delete_node(BNode *node, BNode *pNode, bool isLeft);
-    
     
 };
 
 // helper function
+template <class T>
+bool BinarySearchTree<T>::is_balance_impl(BNode *node)
+{
+    if (node == nullptr) return true;
+    int lh = BinarySearchTree<T>::get_height_impl(node -> left);
+    int rh = BinarySearchTree<T>::get_height_impl(node -> right);
+    if (abs(lh - rh) < 2) return true;
+    else return false;
+    return is_balance_impl(node -> left) && is_balance_impl(node -> right);
+    
+}
+
 template <class T>
 void  BinarySearchTree<T>::create_node(const T &value, BNode *node)
 {
@@ -344,18 +356,6 @@ void  BinarySearchTree<T>::create_node(const T &value, BNode *node)
             create_node(value, node -> left);
         }
     }    
-}
-
-template <class T>
-void BinarySearchTree<T>::freeBinaryTree(BNode *node)
-{
-    if (node == nullptr)
-        return;
-    auto left_node = node -> left;
-    auto right_node = node -> right;
-    delete node;
-    freeBinaryTree(left_node);
-    freeBinaryTree(right_node);
 }
 
 template <class T>
@@ -522,5 +522,138 @@ void BinarySearchTree<T>::insert_node(BNode *node, BNode *start)
         }
     }
 }
+
+template <class T>
+class AVL : public BaseTree<T>
+{
+private:
+    using BaseTree<T>::root;
+    using BaseTree<T>::freeBinaryTree;
+    typedef  typename BaseTree<T>::BNode BNode;
+public:
+    AVL(const initializer_list<T> &li)
+    {
+        auto it = li.begin();
+        root = new BNode(*it);
+        ++it;
+        for(; it != li.end(); ++it)
+        {
+           root = insert(*it);
+        }
+        
+    }
+    ~AVL()
+    {
+        freeBinaryTree(root);
+    }
+public:
+    BNode* insert(const T &value) { return insert_impl(value, root); }
+    bool is_balance() { return is_balance_impl(root); }
+
+private:
+    BNode* insert_impl(const T &value, BNode *node);
+    
+    BNode* ll_rotate(BNode *node);
+    BNode* rr_rotate(BNode *node);
+    BNode* lr_rotate(BNode *node);
+    BNode* rl_rotate(BNode *node);
+
+    bool is_balance_impl(BNode *node);
+
+    
+};
+
+template <class T>
+typename AVL<T>::BNode* AVL<T>::rr_rotate(BNode *node)
+{
+    // 左旋, 失衡节点右结点的左孩子给失衡节点做右孩子，失衡节点做失衡结点右孩子的左孩子
+    auto right = node -> right;
+    node -> right = right -> left;
+    right -> left = node;
+    return right;
+}
+
+template <class T>
+typename AVL<T>::BNode* AVL<T>::ll_rotate(BNode *node)
+{
+    auto left = node -> left;
+    node -> left = left -> right;
+    left -> right = node;
+    return left;
+    
+}
+
+template <class T>
+typename AVL<T>::BNode* AVL<T>::lr_rotate(BNode *node)
+{
+    node -> left = rr_rotate(node ->left); 
+    return ll_rotate(node);
+    
+}
+
+template <class T>
+typename AVL<T>::BNode* AVL<T>::rl_rotate(BNode *node)
+{
+    node -> right = ll_rotate(node -> right);
+    return rr_rotate(node);
+    
+}
+
+template <class T>
+typename AVL<T>::BNode* AVL<T>::insert_impl(const T &value, BNode *node)
+{
+    if (node == nullptr)
+    {
+        cout << "已插入: " << value << endl;
+        return new BNode(value);
+    }
+    if (value > node -> value)
+    {
+        node -> right = insert_impl(value, node -> right);
+        if (!is_balance_impl(node))
+        {
+            if (value > node -> right -> value)
+            {
+                node = rr_rotate(node);
+            }
+            else 
+            {
+                node = rl_rotate(node);
+            }
+        }
+    }
+    else 
+    {
+        node -> left = insert_impl(value, node -> left);
+        if (!is_balance_impl(node))
+        {
+            if (value > node -> left -> value)
+            {
+                node = lr_rotate(node);
+            }
+            else 
+            {
+                node = ll_rotate(node);
+            }
+        }
+    
+    }
+    return node;
+    
+}
+
+template <class T>
+bool AVL<T>::is_balance_impl(BNode *node)
+{
+    if (node == nullptr) return true;
+    int lh = AVL<T>::get_height_impl(node -> left);
+    int rh = AVL<T>::get_height_impl(node -> right);
+    if (abs(lh - rh) < 2) return true;
+    else return false;
+    return is_balance_impl(node -> left) && is_balance_impl(node -> right);
+    
+}
+
+
 
 #endif
