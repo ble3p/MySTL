@@ -3,8 +3,7 @@
 #include <type_traits>
 #include <iterator>
 #include <iostream>
-#include <vector>
-using namespace std;
+#include "vector.h"
 
 /* ============================================冒泡排序=============================================== */
 template <class RandomIter>
@@ -190,7 +189,7 @@ void merge(RandomIter f1, RandomIter l1, RandomIter f2, RandomIter l2,bool asc =
 
     auto len1 = distance(f1, l1), len2 = distance(f2, l2);
     auto tmp = *f1;
-    vector<decltype(tmp)> vec;
+    MyStl::vector<decltype(tmp)> vec;
     auto it1 = f1;
     auto it2 = f2;
     while (it1 != l1 && it2 != l2)
