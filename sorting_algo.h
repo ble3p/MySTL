@@ -3,7 +3,8 @@
 #include <type_traits>
 #include <iterator>
 #include <iostream>
-#include "vector.h"
+#include <vector>
+// using namespace std;
 
 /* ============================================冒泡排序=============================================== */
 template <class RandomIter>
@@ -189,7 +190,8 @@ void merge(RandomIter f1, RandomIter l1, RandomIter f2, RandomIter l2,bool asc =
 
     auto len1 = distance(f1, l1), len2 = distance(f2, l2);
     auto tmp = *f1;
-    MyStl::vector<decltype(tmp)> vec;
+    std::vector<decltype(tmp)> vec;
+    vec.reserve(len1 + len2);
     auto it1 = f1;
     auto it2 = f2;
     while (it1 != l1 && it2 != l2)
@@ -244,4 +246,88 @@ void merge_sort(RandomIter first, RandomIter last, bool asc = true)
     merge(first, mid, mid ,last, asc);
     
 }
+
+/* ============================================merge排序=============================================== */
+
+template <class RandomIter, class T>
+void sink(RandomIter first, RandomIter last, int index, const T value, bool asc = true)
+{
+    int left_index = index * 2 + 1;
+    int right_index = index * 2 + 2;
+    auto len = distance(first, last);
+    
+    if (len <= 1) return;
+    if (left_index >= len) 
+    {
+        first[index] = value;
+        return;
+    }
+
+    if (right_index >= len) 
+    {
+        if (first[left_index] < value == asc)
+        {
+            first[index] = first[left_index];
+            sink(first, last, left_index, value, asc);
+        }
+        else
+        {
+            first[index] = value;
+            return;
+        }
+    }
+    else
+    {
+        if ((first[left_index] < value != asc) && (first[right_index] < value != asc))
+        {
+            first[index] = value;
+            return;
+        }
+        else if ((first[left_index] < first[right_index] == asc) && (first[left_index] < value == asc))
+        {
+            first[index] = first[left_index];
+            sink(first, last, left_index, value, asc);
+        }
+        else if ((first[right_index] < first[left_index] == asc) && (first[right_index] < value == asc))
+        {
+            first[index] = first[right_index];
+            sink(first, last, right_index, value, asc);
+        }
+    }
+}
+
+template <class RandomIter>
+void create_heap(RandomIter first, RandomIter last, bool asc = true)
+{
+    auto len = distance(first, last);
+    for (int i = len / 2 - 1; i >= 0; --i)
+    {
+        sink(first, last, i, first[i], asc);
+    }
+}
+
+template<class RandomIter>
+void heap_sort(RandomIter first, RandomIter last, bool asc = true)
+{
+    create_heap(first, last, asc);
+    auto len = distance(first, last);
+
+    if (len <= 1) return;
+    auto tmp = first[0];
+    std::vector<decltype(tmp)> vec;
+    vec.reserve(len);
+    while( len > 0)
+    {
+        vec.push_back(first[0]);
+        first[0] = first[len - 1];
+        --len;
+        sink(first, first + len, 0, first[0], asc);
+    }
+    for (int i = 0; i < vec.size(); ++i)
+    {
+        first[i] = vec[i];
+    }
+}
+
+
 #endif
